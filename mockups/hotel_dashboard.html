@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotel Dashboard — LaundroTrack</title>
+<style>
+  :root {
+    --primary: #1A237E;
+    --primary-light: #3949AB;
+    --pickup-blue: #1565C0;
+    --delivery-green: #2E7D32;
+    --damage-red: #C62828;
+    --bg: #F5F5F5;
+    --card: #FFFFFF;
+    --text-primary: #212121;
+    --text-secondary: #757575;
+    --border: #E0E0E0;
+    --font: -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: #E8EAF6;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 32px 16px;
+    color: var(--text-primary);
+  }
+
+  /* ===== Phone Frame ===== */
+  .phone-frame {
+    width: 420px;
+    max-width: 100%;
+    height: 860px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 2px #B0BEC5,
+      0 0 0 6px #263238,
+      0 0 0 8px #37474F,
+      0 24px 60px rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Notch */
+  .phone-frame::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150px;
+    height: 28px;
+    background: #263238;
+    border-radius: 0 0 18px 18px;
+    z-index: 20;
+  }
+
+  /* Status bar */
+  .status-bar {
+    background: var(--primary);
+    height: 44px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 24px 6px;
+    color: rgba(255,255,255,0.8);
+    font-size: 12px;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .status-bar .time { font-weight: 600; }
+  .status-bar .icons { display: flex; gap: 6px; font-size: 11px; }
+
+  /* App bar */
+  .app-bar {
+    background: var(--primary);
+    padding: 14px 20px 16px;
+    flex-shrink: 0;
+  }
+  .app-bar h1 {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+  .app-bar .subtitle {
+    color: rgba(255,255,255,0.65);
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  /* Scrollable content */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    padding-bottom: 72px;
+  }
+  .content::-webkit-scrollbar { width: 0; }
+
+  /* ===== Stat Cards ===== */
+
+  /* Primary weight card */
+  .weight-card {
+    background: linear-gradient(135deg, #1A237E 0%, #283593 50%, #3949AB 100%);
+    border-radius: 16px;
+    padding: 24px 20px;
+    margin-bottom: 12px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(26,35,126,0.3);
+  }
+  .weight-card::after {
+    content: '';
+    position: absolute;
+    top: -30px;
+    right: -20px;
+    width: 120px;
+    height: 120px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+  }
+  .weight-card .card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .weight-card .card-header .icon {
+    font-size: 22px;
+  }
+  .weight-card .card-header .label {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.85;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+  .weight-card .value {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+  }
+  .weight-card .unit {
+    font-size: 18px;
+    font-weight: 400;
+    opacity: 0.75;
+    margin-left: 4px;
+  }
+  .weight-card .trend {
+    font-size: 12px;
+    opacity: 0.65;
+    margin-top: 6px;
+  }
+
+  /* Secondary stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+  }
+  .stat-card .stat-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .stat-card .stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.1;
+  }
+  .stat-card .stat-unit {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+  .stat-card.damage {
+    border-left: 3px solid var(--damage-red);
+  }
+  .stat-card.damage .stat-value {
+    color: var(--damage-red);
+  }
+  .stat-card.items .stat-icon {
+    color: var(--primary-light);
+  }
+
+  /* ===== Section Header ===== */
+  .section-header {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ===== Weight Breakdown ===== */
+  .breakdown-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+  }
+  .bar-row {
+    margin-bottom: 14px;
+  }
+  .bar-row:last-child { margin-bottom: 0; }
+  .bar-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .bar-label .dept-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .bar-label .dept-value {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  .bar-track {
+    height: 10px;
+    background: #ECEFF1;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.6s ease;
+  }
+  .bar-fill.blue { background: linear-gradient(90deg, #1565C0, #42A5F5); }
+  .bar-fill.green { background: linear-gradient(90deg, #2E7D32, #66BB6A); }
+  .bar-fill.purple { background: linear-gradient(90deg, #6A1B9A, #AB47BC); }
+
+  /* ===== Quick Actions ===== */
+  .actions-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .action-btn {
+    flex: 1;
+    padding: 12px 8px;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: transform 0.1s, box-shadow 0.15s;
+  }
+  .action-btn:active { transform: scale(0.97); }
+  .action-btn.pending {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(26,35,126,0.25);
+  }
+  .action-btn.report {
+    background: #fff;
+    color: var(--primary);
+    border: 1.5px solid var(--primary);
+  }
+
+  /* ===== Recent Activity ===== */
+  .activity-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+  }
+  .activity-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #F0F0F0;
+  }
+  .activity-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .activity-item:first-child { padding-top: 0; }
+
+  .activity-time {
+    flex-shrink: 0;
+    width: 44px;
+    text-align: center;
+    padding-top: 2px;
+  }
+  .activity-time .day {
+    font-size: 10px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+  .activity-time .date {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .activity-dot-line {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    padding-top: 4px;
+  }
+  .activity-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .activity-dot.pickup { background: var(--pickup-blue); }
+  .activity-dot.delivery { background: var(--delivery-green); }
+  .activity-line {
+    width: 2px;
+    flex: 1;
+    background: #E0E0E0;
+    margin-top: 4px;
+  }
+  .activity-item:last-child .activity-line { display: none; }
+
+  .activity-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .activity-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .badge.pickup { background: #E3F2FD; color: var(--pickup-blue); }
+  .badge.delivery { background: #E8F5E9; color: var(--delivery-green); }
+  .activity-cn {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .activity-dept {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 3px;
+  }
+  .activity-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+  .activity-meta span {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  /* ===== Bottom Nav ===== */
+  .bottom-nav {
+    display: flex;
+    background: #fff;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    padding: 6px 0 10px;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 0;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .nav-item.active {
+    color: var(--primary);
+  }
+  .nav-item .nav-icon {
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  /* Home indicator */
+  .home-indicator {
+    height: 22px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .home-indicator::after {
+    content: '';
+    width: 134px;
+    height: 5px;
+    background: #212121;
+    border-radius: 3px;
+    opacity: 0.2;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="icons">
+      <span>●●●●○</span>
+      <span>WiFi</span>
+      <span>🔋</span>
+    </div>
+  </div>
+
+  <!-- App Bar -->
+  <div class="app-bar">
+    <h1>Hotel Sunrise · Dashboard</h1>
+    <div class="subtitle">Live inventory overview</div>
+  </div>
+
+  <!-- Scrollable Content -->
+  <div class="content">
+
+    <!-- Primary Weight Card -->
+    <div class="weight-card">
+      <div class="card-header">
+        <span class="icon">⚖️</span>
+        <span class="label">Total Weight in Laundry</span>
+      </div>
+      <div class="value">1,250.5<span class="unit">kg</span></div>
+      <div class="trend">↑ 3.2% from yesterday</div>
+    </div>
+
+    <!-- Secondary Stat Cards -->
+    <div class="stats-row">
+      <div class="stat-card items">
+        <div class="stat-label">Items in Laundry</div>
+        <div class="stat-value">735 <span class="stat-unit">items</span></div>
+      </div>
+      <div class="stat-card damage">
+        <div class="stat-label">Damaged Items</div>
+        <div class="stat-value">23 <span class="stat-unit">items</span></div>
+      </div>
+    </div>
+
+    <!-- Weight Breakdown by Department -->
+    <div class="section-header">Weight by Department</div>
+    <div class="breakdown-card">
+      <div class="bar-row">
+        <div class="bar-label">
+          <span class="dept-name">Housekeeping</span>
+          <span class="dept-value">450.2 kg · 36%</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill blue" style="width: 36%"></div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">
+          <span class="dept-name">Restaurant</span>
+          <span class="dept-value">380.0 kg · 30%</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill green" style="width: 30%"></div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">
+          <span class="dept-name">Spa</span>
+          <span class="dept-value">420.3 kg · 34%</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill purple" style="width: 34%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="section-header">Quick Actions</div>
+    <div class="actions-row">
+      <button class="action-btn pending">📋 View Pending</button>
+      <button class="action-btn report">📊 Generate Report</button>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="section-header">Recent Activity</div>
+    <div class="activity-card">
+
+      <!-- Entry 1 -->
+      <div class="activity-item">
+        <div class="activity-time">
+          <div class="day">Mar</div>
+          <div class="date">15</div>
+        </div>
+        <div class="activity-dot-line">
+          <div class="activity-dot pickup"></div>
+          <div class="activity-line"></div>
+        </div>
+        <div class="activity-body">
+          <div class="activity-top">
+            <span class="badge pickup">Pickup</span>
+            <span class="activity-cn">CN-015</span>
+          </div>
+          <div class="activity-dept">Housekeeping, Banquet</div>
+          <div class="activity-meta">
+            <span>👤 Suresh</span>
+            <span>📦 260 pcs</span>
+            <span>⚖️ 15.2 kg</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Entry 2 -->
+      <div class="activity-item">
+        <div class="activity-time">
+          <div class="day">Mar</div>
+          <div class="date">15</div>
+        </div>
+        <div class="activity-dot-line">
+          <div class="activity-dot delivery"></div>
+          <div class="activity-line"></div>
+        </div>
+        <div class="activity-body">
+          <div class="activity-top">
+            <span class="badge delivery">Delivery</span>
+            <span class="activity-cn">CN-007</span>
+          </div>
+          <div class="activity-dept">Housekeeping, Restaurant</div>
+          <div class="activity-meta">
+            <span>👤 Rajesh</span>
+            <span>📦 620 pcs</span>
+            <span>⚖️ 24.0 kg</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Entry 3 -->
+      <div class="activity-item">
+        <div class="activity-time">
+          <div class="day">Mar</div>
+          <div class="date">14</div>
+        </div>
+        <div class="activity-dot-line">
+          <div class="activity-dot pickup"></div>
+          <div class="activity-line"></div>
+        </div>
+        <div class="activity-body">
+          <div class="activity-top">
+            <span class="badge pickup">Pickup</span>
+            <span class="activity-cn">CN-012</span>
+          </div>
+          <div class="activity-dept">Spa</div>
+          <div class="activity-meta">
+            <span>👤 Amit</span>
+            <span>📦 40 pcs</span>
+            <span>⚖️ 8.0 kg</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Entry 4 -->
+      <div class="activity-item">
+        <div class="activity-time">
+          <div class="day">Mar</div>
+          <div class="date">14</div>
+        </div>
+        <div class="activity-dot-line">
+          <div class="activity-dot delivery"></div>
+          <div class="activity-line"></div>
+        </div>
+        <div class="activity-body">
+          <div class="activity-top">
+            <span class="badge delivery">Delivery</span>
+            <span class="activity-cn">CN-009</span>
+          </div>
+          <div class="activity-dept">Housekeeping</div>
+          <div class="activity-meta">
+            <span>👤 Vikram</span>
+            <span>📦 180 pcs</span>
+            <span>⚖️ 12.5 kg</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Entry 5 -->
+      <div class="activity-item">
+        <div class="activity-time">
+          <div class="day">Mar</div>
+          <div class="date">13</div>
+        </div>
+        <div class="activity-dot-line">
+          <div class="activity-dot pickup"></div>
+          <div class="activity-line"></div>
+        </div>
+        <div class="activity-body">
+          <div class="activity-top">
+            <span class="badge pickup">Pickup</span>
+            <span class="activity-cn">CN-011</span>
+          </div>
+          <div class="activity-dept">Restaurant, Spa</div>
+          <div class="activity-meta">
+            <span>👤 Suresh</span>
+            <span>📦 95 pcs</span>
+            <span>⚖️ 6.8 kg</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <a class="nav-item active" href="#">
+      <span class="nav-icon">📊</span>
+      Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📦</span>
+      Inventory
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📋</span>
+      Challans
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">✅</span>
+      Quality
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">💰</span>
+      Billing
+    </a>
+  </div>
+
+  <!-- Home Indicator -->
+  <div class="home-indicator"></div>
+</div>
+
+</body>
+</html>

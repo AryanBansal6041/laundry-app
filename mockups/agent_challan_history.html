@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Challan History — LaundroTrack</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #E0E0E0;
+    font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 24px 0;
+  }
+  .phone-frame {
+    width: 100%;
+    max-width: 420px;
+    height: 850px;
+    background: #F5F5F5;
+    border-radius: 32px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.22), 0 0 0 2px #bbb;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .status-bar {
+    background: #1A237E;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px 4px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .status-bar-icons { display: flex; gap: 6px; align-items: center; }
+  .app-bar {
+    background: #1A237E;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    padding: 12px 16px 16px;
+    gap: 12px;
+  }
+  .back-arrow {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 20px;
+    color: #fff;
+  }
+  .back-arrow:hover { background: rgba(255,255,255,0.15); }
+  .app-bar h1 { font-size: 19px; font-weight: 600; }
+  .scrollable {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px 12px;
+  }
+  .filter-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0 8px;
+    cursor: pointer;
+  }
+  .filter-toggle span {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1A237E;
+  }
+  .filter-panel {
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 14px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .filter-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #757575;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 4px;
+  }
+  .filter-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #212121;
+    background: #FAFAFA;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23757575' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    cursor: pointer;
+  }
+  .segment-bar {
+    display: flex;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1.5px solid #E0E0E0;
+  }
+  .segment-item {
+    flex: 1;
+    text-align: center;
+    padding: 9px 0;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #fff;
+    color: #757575;
+    border-right: 1px solid #E0E0E0;
+    transition: all 0.2s;
+  }
+  .segment-item:last-child { border-right: none; }
+  .segment-item.active {
+    background: #1565C0;
+    color: #fff;
+    border-color: #1565C0;
+  }
+  .date-range {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .date-input {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1.5px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #212121;
+    background: #FAFAFA;
+    text-align: center;
+  }
+  .date-sep { color: #BDBDBD; font-size: 16px; }
+  .result-count {
+    font-size: 13px;
+    color: #757575;
+    padding: 4px 0 10px;
+  }
+  .card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+  }
+  .card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cn-id { font-size: 15px; font-weight: 700; color: #212121; }
+  .badge {
+    display: inline-flex;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge-pickup { background: #E3F2FD; color: #1565C0; }
+  .badge-delivery { background: #E8F5E9; color: #2E7D32; }
+  .card-dept {
+    font-size: 13px;
+    color: #757575;
+    margin-top: 4px;
+  }
+  .card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #9E9E9E;
+  }
+  .card-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 13px;
+    color: #212121;
+    font-weight: 500;
+  }
+  .card-stats span { display: flex; align-items: center; gap: 4px; }
+  .card-chevron { color: #BDBDBD; font-size: 18px; }
+  .load-more {
+    text-align: center;
+    padding: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1A237E;
+    cursor: pointer;
+  }
+  .load-more:hover { text-decoration: underline; }
+  .bottom-nav {
+    background: #FFFFFF;
+    border-top: 1px solid #E0E0E0;
+    display: flex;
+    padding: 8px 0 12px;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 4px 0;
+  }
+  .nav-icon { font-size: 22px; }
+  .nav-label { font-size: 11px; color: #757575; font-weight: 500; }
+  .nav-item.active .nav-label { color: #1A237E; font-weight: 700; }
+  .nav-item.active .nav-icon { filter: none; }
+  .nav-indicator {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: #1A237E;
+    margin-top: 1px;
+  }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+  <div class="status-bar">
+    <span>10:45 AM</span>
+    <div class="status-bar-icons">
+      <span>●●●●○</span>
+      <span>WiFi</span>
+      <span>🔋 82%</span>
+    </div>
+  </div>
+  <div class="app-bar">
+    <div class="back-arrow">←</div>
+    <h1>Challan History</h1>
+  </div>
+  <div class="scrollable">
+    <div class="filter-toggle">
+      <span>Filters ▼</span>
+    </div>
+    <div class="filter-panel">
+      <div>
+        <div class="filter-label">Department</div>
+        <select class="filter-select">
+          <option>All Departments</option>
+          <option>Housekeeping</option>
+          <option>Restaurant</option>
+          <option>Spa</option>
+        </select>
+      </div>
+      <div>
+        <div class="filter-label">Type</div>
+        <div class="segment-bar">
+          <div class="segment-item">All</div>
+          <div class="segment-item active">Pickup</div>
+          <div class="segment-item">Delivery</div>
+        </div>
+      </div>
+      <div>
+        <div class="filter-label">Date Range</div>
+        <div class="date-range">
+          <div class="date-input">Mar 1, 2026</div>
+          <span class="date-sep">→</span>
+          <div class="date-input">Mar 15, 2026</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-count">Showing 42 challans</div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-left">
+          <span class="cn-id">CN-008</span>
+          <span class="badge badge-pickup">Pickup</span>
+        </div>
+        <span class="card-chevron">›</span>
+      </div>
+      <div class="card-dept">Housekeeping</div>
+      <div class="card-meta">
+        <span>Mar 15, 9:45 AM</span>
+        <div class="card-stats">
+          <span>📦 100 pcs</span>
+          <span>⚖️ 25.5 kg</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-left">
+          <span class="cn-id">CN-007</span>
+          <span class="badge badge-delivery">Delivery</span>
+        </div>
+        <span class="card-chevron">›</span>
+      </div>
+      <div class="card-dept">Housekeeping</div>
+      <div class="card-meta">
+        <span>Mar 14, 4:30 PM</span>
+        <div class="card-stats">
+          <span>📦 80 pcs</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-left">
+          <span class="cn-id">CN-006</span>
+          <span class="badge badge-pickup">Pickup</span>
+        </div>
+        <span class="card-chevron">›</span>
+      </div>
+      <div class="card-dept">Restaurant</div>
+      <div class="card-meta">
+        <span>Mar 14, 10:00 AM</span>
+        <div class="card-stats">
+          <span>📦 500 pcs</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-left">
+          <span class="cn-id">CN-005</span>
+          <span class="badge badge-delivery">Delivery</span>
+        </div>
+        <span class="card-chevron">›</span>
+      </div>
+      <div class="card-dept">Spa</div>
+      <div class="card-meta">
+        <span>Mar 13, 3:15 PM</span>
+        <div class="card-stats">
+          <span>📦 33 pcs</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-left">
+          <span class="cn-id">CN-004</span>
+          <span class="badge badge-pickup">Pickup</span>
+        </div>
+        <span class="card-chevron">›</span>
+      </div>
+      <div class="card-dept">Spa</div>
+      <div class="card-meta">
+        <span>Mar 13, 11:00 AM</span>
+        <div class="card-stats">
+          <span>📦 35 pcs</span>
+          <span>⚖️ 30 kg</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="load-more">Load more…</div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-item">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Home</span>
+    </div>
+    <div class="nav-item active">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">History</span>
+      <div class="nav-indicator"></div>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Settings</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaundroTrack — Hotel Detail</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; background: #F5F5F5; color: #212121; display: flex; min-height: 100vh; }
+
+  .sidebar { width: 220px; min-height: 100vh; background: #1A237E; color: #fff; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+  .sidebar-logo { padding: 24px 20px 20px; font-size: 20px; font-weight: 700; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .sidebar-nav { flex: 1; padding: 12px 0; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 20px; font-size: 14px; color: rgba(255,255,255,0.7); cursor: pointer; transition: all 0.15s; text-decoration: none; }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-item.active { background: #3949AB; color: #fff; font-weight: 600; }
+  .nav-icon { width: 20px; text-align: center; font-size: 16px; }
+
+  .main { margin-left: 220px; flex: 1; min-height: 100vh; }
+  .topbar { background: #fff; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E0E0E0; }
+  .breadcrumb { font-size: 15px; color: #757575; }
+  .breadcrumb a { color: #757575; text-decoration: none; }
+  .breadcrumb a:hover { color: #1A237E; text-decoration: underline; }
+  .breadcrumb .current { color: #212121; font-weight: 600; }
+  .topbar-right { display: flex; align-items: center; gap: 20px; }
+  .notif-bell { font-size: 20px; cursor: pointer; position: relative; }
+  .notif-badge { position: absolute; top: -4px; right: -6px; background: #C62828; color: #fff; font-size: 10px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .profile { font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .profile-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1A237E; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }
+
+  .content { padding: 28px 32px; }
+
+  .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 24px; }
+  .card-header { padding: 18px 24px 14px; font-size: 16px; font-weight: 600; border-bottom: 1px solid #E0E0E0; display: flex; align-items: center; justify-content: space-between; }
+  .card-body { padding: 20px 24px; }
+
+  .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .info-item { }
+  .info-label { font-size: 12px; color: #757575; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .info-value { font-size: 15px; font-weight: 600; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 12px; font-weight: 600; color: #757575; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 16px; border-bottom: 2px solid #E0E0E0; }
+  td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid #F0F0F0; }
+  tr:hover td { background: #FAFAFA; }
+
+  .chip { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+  .chip-weight { background: #E8EAF6; color: #1A237E; }
+  .chip-piece { background: #FFF3E0; color: #E65100; }
+  .chip-soiled { background: #E3F2FD; color: #1565C0; }
+  .chip-calculated { background: #F3E5F5; color: #7B1FA2; }
+
+  .btn { padding: 8px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-primary { background: #1A237E; color: #fff; }
+  .btn-primary:hover { background: #3949AB; }
+  .btn-secondary { background: #fff; color: #212121; border: 1px solid #E0E0E0; }
+  .btn-danger-ghost { background: none; border: none; color: #C62828; font-weight: 600; cursor: pointer; font-size: 13px; }
+  .btn-danger-ghost:hover { text-decoration: underline; }
+
+  .text-muted { color: #757575; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; }
+  .modal { background: #fff; border-radius: 12px; width: 500px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+  .modal-header { padding: 20px 24px 16px; font-size: 18px; font-weight: 700; border-bottom: 1px solid #E0E0E0; display: flex; justify-content: space-between; align-items: center; }
+  .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #757575; }
+  .modal-body { padding: 20px 24px; }
+  .form-group { margin-bottom: 18px; }
+  .form-label { display: block; font-size: 13px; font-weight: 600; color: #212121; margin-bottom: 6px; }
+  .form-label .req { color: #C62828; }
+  .form-input, .form-select { width: 100%; padding: 10px 14px; border: 1px solid #E0E0E0; border-radius: 8px; font-size: 14px; outline: none; background: #fff; }
+  .form-input:focus, .form-select:focus { border-color: #1A237E; box-shadow: 0 0 0 3px rgba(26,35,126,0.1); }
+  .modal-footer { padding: 16px 24px 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #E0E0E0; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">🧺 LaundroTrack</div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="admin_dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+    <a class="nav-item active" href="admin_hotels.html"><span class="nav-icon">🏨</span> Hotels</a>
+    <a class="nav-item" href="admin_items.html"><span class="nav-icon">👔</span> Items</a>
+    <a class="nav-item" href="admin_users.html"><span class="nav-icon">👥</span> Users</a>
+    <a class="nav-item" href="admin_agent_mapping.html"><span class="nav-icon">🔗</span> Agent Mapping</a>
+    <a class="nav-item" href="#"><span class="nav-icon">✅</span> Quality</a>
+    <a class="nav-item" href="admin_billing.html"><span class="nav-icon">📈</span> Reports</a>
+    <a class="nav-item" href="#"><span class="nav-icon">⚙️</span> Settings</a>
+  </nav>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="breadcrumb"><a href="admin_hotels.html">Hotels</a> &nbsp;›&nbsp; <span class="current">Hotel Sunrise</span></div>
+    <div class="topbar-right">
+      <div class="notif-bell">🔔<span class="notif-badge">3</span></div>
+      <div class="profile"><span class="profile-avatar">A</span> Admin ▼</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Hotel Info Card -->
+    <div class="card">
+      <div class="card-header">Hotel Information</div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Hotel Name</div>
+            <div class="info-value">Hotel Sunrise</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Address</div>
+            <div class="info-value">42 Marine Drive, Mumbai 400001</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Contact</div>
+            <div class="info-value">+91 98765 43210</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Created</div>
+            <div class="info-value">Jan 15, 2026</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Departments -->
+    <div class="card">
+      <div class="card-header">
+        Departments <span style="color:#757575;font-weight:400;">(3)</span>
+        <button class="btn btn-primary btn-sm">+ Add Department</button>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Billing Type</th><th>Rate</th><th>Weight Source</th><th>Items Count</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight:600;">Housekeeping</td>
+              <td><span class="chip chip-weight">WEIGHT</span></td>
+              <td>₹3.00 / kg</td>
+              <td><span class="chip chip-soiled">SOILED</span></td>
+              <td>5</td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;">Restaurant</td>
+              <td><span class="chip chip-piece">PIECE</span></td>
+              <td class="text-muted">—</td>
+              <td class="text-muted">—</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;">Spa</td>
+              <td><span class="chip chip-weight">WEIGHT</span></td>
+              <td>₹4.00 / kg</td>
+              <td><span class="chip chip-calculated">CALCULATED</span></td>
+              <td>3</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Assigned Agents -->
+    <div class="card">
+      <div class="card-header">
+        Assigned Agents <span style="color:#757575;font-weight:400;">(2)</span>
+        <button class="btn btn-primary btn-sm">+ Assign Agent</button>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table>
+          <thead>
+            <tr><th>Agent Name</th><th>Phone</th><th>Assigned Date</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight:600;">agent_rajesh</td>
+              <td>+91 99887 76655</td>
+              <td class="text-muted">Feb 28, 2026</td>
+              <td><button class="btn-danger-ghost">✕ Unassign</button></td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;">agent_priya</td>
+              <td>+91 99887 76657</td>
+              <td class="text-muted">Mar 10, 2026</td>
+              <td><button class="btn-danger-ghost">✕ Unassign</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Department Modal -->
+<div class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      Add Department
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Department Name <span class="req">*</span></label>
+        <input class="form-input" type="text" placeholder="e.g. Housekeeping, Restaurant">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Billing Type</label>
+          <select class="form-select">
+            <option selected>WEIGHT</option>
+            <option>PIECE</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Price per kg</label>
+          <input class="form-input" type="text" placeholder="₹0.00" value="₹3.00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Weight Source</label>
+        <select class="form-select">
+          <option selected>SOILED</option>
+          <option>CALCULATED</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary">Cancel</button>
+      <button class="btn btn-primary">Create Department</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

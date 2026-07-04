@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Offline Queue — LaundroTrack</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #E0E0E0;
+    font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 24px 0;
+  }
+  .phone-frame {
+    width: 100%;
+    max-width: 420px;
+    min-height: 800px;
+    background: #F5F5F5;
+    border-radius: 32px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.22), 0 0 0 2px #bbb;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .status-bar {
+    background: #1A237E;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px 4px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .status-bar-icons { display: flex; gap: 6px; align-items: center; }
+  .offline-banner {
+    background: #C62828;
+    color: #fff;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.2px;
+  }
+  .offline-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #FF8A80;
+    animation: pulse-dot 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .app-bar {
+    background: #1A237E;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    padding: 12px 16px 16px;
+    gap: 12px;
+  }
+  .back-arrow {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    color: #fff;
+  }
+  .back-arrow:hover { background: rgba(255,255,255,0.15); }
+  .app-bar h1 { font-size: 19px; font-weight: 600; }
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .sync-btn-disabled {
+    width: 100%;
+    padding: 13px;
+    border-radius: 10px;
+    background: #E0E0E0;
+    color: #9E9E9E;
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: not-allowed;
+    letter-spacing: 0.3px;
+    text-align: center;
+  }
+  .card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .status-pending { background: #FFF8E1; color: #F57F17; }
+  .status-syncing { background: #E3F2FD; color: #1565C0; }
+  .status-failed { background: #FFEBEE; color: #C62828; }
+  .card-id {
+    font-size: 15px;
+    font-weight: 700;
+    color: #212121;
+  }
+  .card-id .type-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #757575;
+    margin-left: 6px;
+  }
+  .card-client {
+    font-size: 13px;
+    color: #757575;
+  }
+  .card-saved {
+    font-size: 12px;
+    color: #9E9E9E;
+  }
+  .card-error {
+    background: #FFEBEE;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #C62828;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+  .card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 2px;
+  }
+  .btn {
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    letter-spacing: 0.3px;
+  }
+  .btn-delete {
+    background: #fff;
+    color: #C62828;
+    border: 1.5px solid #FFCDD2;
+  }
+  .btn-delete:hover { background: #FFEBEE; }
+  .btn-retry {
+    background: #1A237E;
+    color: #fff;
+  }
+  .btn-retry:hover { background: #3949AB; }
+  .syncing-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: #E3F2FD;
+    overflow: hidden;
+  }
+  .syncing-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -40%;
+    width: 40%;
+    height: 100%;
+    background: #1565C0;
+    animation: slide 1.2s ease-in-out infinite;
+  }
+  @keyframes slide {
+    0% { left: -40%; }
+    100% { left: 100%; }
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .spin-icon {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+  }
+  .footer-note {
+    text-align: center;
+    font-size: 12px;
+    color: #9E9E9E;
+    padding: 12px 24px 8px;
+    line-height: 1.5;
+  }
+  .queue-count {
+    font-size: 13px;
+    color: #757575;
+    font-weight: 600;
+    padding: 2px 0 4px;
+  }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+  <div class="status-bar">
+    <span>2:45 PM</span>
+    <div class="status-bar-icons">
+      <span>●○○○○</span>
+      <span style="text-decoration:line-through;opacity:0.5;">WiFi</span>
+      <span>🔋 65%</span>
+    </div>
+  </div>
+  <div class="offline-banner">
+    <div class="offline-dot"></div>
+    Offline — Will sync when connected
+  </div>
+  <div class="app-bar">
+    <div class="back-arrow">←</div>
+    <h1>Offline Queue</h1>
+  </div>
+  <div class="content">
+    <button class="sync-btn-disabled" disabled>SYNC NOW</button>
+
+    <div class="queue-count">3 challans in queue</div>
+
+    <!-- Card 1: Pending -->
+    <div class="card">
+      <div class="card-top-row">
+        <span class="status-badge status-pending">🟡 Pending</span>
+      </div>
+      <div class="card-id">CN-009 <span class="type-label">· PICKUP</span></div>
+      <div class="card-client">Hotel Sunrise · Housekeeping</div>
+      <div class="card-saved">Saved: 2 min ago</div>
+      <div class="card-actions">
+        <button class="btn btn-delete">Delete</button>
+      </div>
+    </div>
+
+    <!-- Card 2: Syncing -->
+    <div class="card">
+      <div class="card-top-row">
+        <span class="status-badge status-syncing"><span class="spin-icon">🔵</span> Syncing</span>
+      </div>
+      <div class="card-id">CN-008 <span class="type-label">· DELIVERY</span></div>
+      <div class="card-client">Hotel Grand · Spa</div>
+      <div class="card-saved">Saved: 15 min ago</div>
+      <div class="syncing-bar"></div>
+    </div>
+
+    <!-- Card 3: Failed -->
+    <div class="card">
+      <div class="card-top-row">
+        <span class="status-badge status-failed">🔴 Failed</span>
+      </div>
+      <div class="card-id">CN-005 <span class="type-label">· DELIVERY</span></div>
+      <div class="card-client">Hotel Grand · Spa</div>
+      <div class="card-saved">Saved: 1 hour ago</div>
+      <div class="card-error">⚠️ Cannot deliver 50 of Bathrobe; only 20 in laundry</div>
+      <div class="card-actions">
+        <button class="btn btn-retry">Retry</button>
+        <button class="btn btn-delete">Delete</button>
+      </div>
+    </div>
+
+    <div class="footer-note">Challans are synced automatically when you're back online.</div>
+  </div>
+</div>
+</body>
+</html>

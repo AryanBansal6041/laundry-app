@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaundroTrack — Delivery Form (Multi-Dept)</title>
+<style>
+  :root {
+    --primary: #1A237E;
+    --pickup-blue: #1565C0;
+    --delivery-green: #2E7D32;
+    --delivery-green-light: #43A047;
+    --bg: #F5F5F5;
+    --card: #FFFFFF;
+    --text-primary: #212121;
+    --text-secondary: #757575;
+    --text-hint: #9E9E9E;
+    --border: #E0E0E0;
+    --damage-red: #C62828;
+    --font: -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: #e0e0e0;
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 24px 8px;
+  }
+
+  .phone-frame {
+    width: 100%;
+    max-width: 420px;
+    height: 860px;
+    background: var(--bg);
+    border-radius: 40px;
+    border: 4px solid #333;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25), inset 0 0 0 2px #555;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 160px;
+    height: 28px;
+    background: #333;
+    border-radius: 0 0 18px 18px;
+    z-index: 20;
+  }
+  .notch::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 24px;
+    width: 10px;
+    height: 10px;
+    background: #1a1a2e;
+    border-radius: 50%;
+    box-shadow: inset 0 0 3px rgba(50,100,200,.5);
+  }
+
+  /* App Bar */
+  .app-bar {
+    background: var(--delivery-green);
+    color: #fff;
+    padding: 38px 16px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  }
+  .back-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255,255,255,.15);
+    border: none;
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+  }
+  .back-btn:hover { background: rgba(255,255,255,.25); }
+  .app-bar-title {
+    flex: 1;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: .2px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+  }
+  .badge-delivery {
+    background: rgba(255,255,255,.2);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.4);
+  }
+
+  /* Scrollable Content */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    padding-bottom: 150px;
+  }
+
+  /* Challan Select Field */
+  .challan-field {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+  }
+  .challan-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-bottom: 6px;
+  }
+  .challan-select {
+    width: 100%;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #FAFAFA;
+    font-family: var(--font);
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23757575' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    cursor: pointer;
+  }
+  .challan-select:focus {
+    outline: none;
+    border-color: var(--delivery-green);
+    box-shadow: 0 0 0 3px rgba(46,125,50,.12);
+  }
+
+  /* Deliver All Items Button */
+  .deliver-all-btn {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid var(--delivery-green);
+    border-radius: 12px;
+    background: rgba(46,125,50,.04);
+    color: var(--delivery-green);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: var(--font);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    letter-spacing: .4px;
+    transition: background .15s, box-shadow .15s;
+  }
+  .deliver-all-btn:hover {
+    background: rgba(46,125,50,.1);
+    box-shadow: 0 2px 8px rgba(46,125,50,.15);
+  }
+  .deliver-all-btn .check-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--delivery-green);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  /* Department Section */
+  .dept-section {
+    border-radius: 14px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    background: var(--card);
+    border: 1px solid var(--border);
+  }
+  .dept-section.weight { border-left: 4px solid var(--pickup-blue); }
+  .dept-section.piece  { border-left: 4px solid var(--delivery-green); }
+
+  .dept-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    background: #FAFAFA;
+    border-bottom: 1px solid var(--border);
+  }
+  .dept-header .chevron {
+    font-size: 14px;
+    color: var(--text-secondary);
+    transition: transform .2s;
+  }
+  .dept-header.collapsed .chevron { transform: rotate(-90deg); }
+  .dept-header .dept-name {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .badge-weight {
+    background: rgba(21,101,192,.1);
+    color: var(--pickup-blue);
+    border: 1px solid rgba(21,101,192,.25);
+  }
+  .badge-piece {
+    background: rgba(46,125,50,.1);
+    color: var(--delivery-green);
+    border: 1px solid rgba(46,125,50,.25);
+  }
+
+  .dept-body { padding: 12px 14px; }
+
+  /* Fresh Weight Field */
+  .weight-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    background: rgba(21,101,192,.03);
+    border: 1px solid rgba(21,101,192,.15);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .weight-field-label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .weight-field-label .label-main {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--pickup-blue);
+    white-space: nowrap;
+  }
+  .weight-field-label .label-sub {
+    font-size: 10px;
+    color: var(--text-hint);
+    font-weight: 500;
+  }
+  .weight-input-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+  }
+  .weight-input-wrap input {
+    flex: 1;
+    border: none;
+    padding: 9px 12px;
+    font-size: 15px;
+    font-weight: 600;
+    background: transparent;
+    font-family: var(--font);
+    color: var(--text-primary);
+    min-width: 0;
+  }
+  .weight-input-wrap input:focus { outline: none; }
+  .weight-suffix {
+    padding: 9px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: #EEEEEE;
+    border-left: 1px solid var(--border);
+  }
+
+  /* Search Bar */
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #F0F0F0;
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+  }
+  .search-bar .search-icon {
+    color: var(--text-secondary);
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .search-bar input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    color: var(--text-primary);
+    font-family: var(--font);
+  }
+  .search-bar input:focus { outline: none; }
+  .search-bar input::placeholder { color: #BDBDBD; }
+
+  /* Item Cards */
+  .item-card {
+    background: #FAFAFA;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+  .item-card .item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .item-card .item-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .item-card .item-ref {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .item-ref-tag {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-hint);
+    background: #F0F0F0;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+  .item-card .item-fields {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .field-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .field-group label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--text-secondary);
+  }
+  .field-group label.deliver-label { color: var(--delivery-green); }
+  .field-group label.damage-label { color: var(--damage-red); }
+
+  .stepper {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--card);
+  }
+  .stepper button {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #F5F5F5;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font);
+    transition: background .1s;
+  }
+  .stepper button:hover { background: #E8E8E8; }
+  .stepper button:active { background: #DDD; }
+  .stepper .stepper-val {
+    width: 44px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    padding: 6px 0;
+    background: var(--card);
+  }
+  .stepper.deliver .stepper-val { color: var(--delivery-green); }
+  .stepper.damage .stepper-val { color: var(--damage-red); }
+
+  /* Department Subtotal */
+  .dept-subtotal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0 2px;
+    border-top: 1px dashed var(--border);
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+  .dept-subtotal .deliver-count { color: var(--delivery-green); }
+  .dept-subtotal .dmg-count { color: var(--damage-red); }
+
+  /* Sticky Footer */
+  .sticky-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding: 10px 16px 20px;
+    z-index: 10;
+    box-shadow: 0 -4px 16px rgba(0,0,0,.08);
+  }
+  .summary-bar {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+  .summary-bar strong { color: var(--text-primary); }
+  .summary-bar .green-highlight { color: var(--delivery-green); font-weight: 700; }
+  .summary-bar .dmg-highlight { color: var(--damage-red); font-weight: 700; }
+
+  .btn-submit {
+    width: 100%;
+    height: 48px;
+    border: none;
+    border-radius: 12px;
+    background: var(--delivery-green);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: .6px;
+    cursor: pointer;
+    font-family: var(--font);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(46,125,50,.3);
+    transition: background .15s, box-shadow .15s;
+  }
+  .btn-submit:hover {
+    background: #1B5E20;
+    box-shadow: 0 6px 16px rgba(46,125,50,.4);
+  }
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+  <div class="notch"></div>
+
+  <!-- App Bar -->
+  <div class="app-bar">
+    <button class="back-btn">←</button>
+    <div class="app-bar-title">Delivery — Hotel Sunrise</div>
+    <span class="badge badge-delivery">DELIVERY</span>
+  </div>
+
+  <!-- Scrollable Content -->
+  <div class="content">
+
+    <!-- Challan Number Dropdown -->
+    <div class="challan-field">
+      <label>Select Pending Pickup</label>
+      <select class="challan-select">
+        <option value="CN-007" selected>CN-007 — 12 Mar 2026</option>
+        <option value="CN-005">CN-005 — 8 Mar 2026</option>
+        <option value="CN-003">CN-003 — 1 Mar 2026</option>
+      </select>
+    </div>
+
+    <!-- Deliver All Items Button -->
+    <button class="deliver-all-btn" onclick="deliverAll()">
+      <span class="check-icon">✓</span>
+      DELIVER ALL ITEMS
+    </button>
+
+    <!-- Department 1: Housekeeping [WEIGHT] -->
+    <div class="dept-section weight">
+      <div class="dept-header" onclick="toggleDept(this)">
+        <span class="chevron">▼</span>
+        <span class="dept-name">Housekeeping</span>
+        <span class="badge badge-weight">WEIGHT</span>
+      </div>
+      <div class="dept-body">
+
+        <!-- Fresh Weight -->
+        <div class="weight-field">
+          <div class="weight-field-label">
+            <span class="label-main">Fresh Weight (kg)</span>
+            <span class="label-sub">clean linen</span>
+          </div>
+          <div class="weight-input-wrap">
+            <input type="number" value="24.00" step="0.01">
+            <span class="weight-suffix">kg</span>
+          </div>
+        </div>
+
+        <!-- Item Search -->
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="Search items...">
+        </div>
+
+        <!-- Item: Bedsheet King Size -->
+        <div class="item-card">
+          <div class="item-top">
+            <div class="item-name">Bedsheet King Size</div>
+          </div>
+          <div class="item-ref">
+            <span class="item-ref-tag">Picked: 50</span>
+            <span class="item-ref-tag">In laundry: 50</span>
+          </div>
+          <div class="item-fields">
+            <div class="field-group">
+              <label class="deliver-label">Deliver Qty</label>
+              <div class="stepper deliver">
+                <button onclick="step(this,-1)">−</button>
+                <span class="stepper-val">45</span>
+                <button onclick="step(this,1)">+</button>
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="damage-label">Damaged</label>
+              <div class="stepper damage">
+                <button onclick="step(this,-1)">−</button>
+                <span class="stepper-val">5</span>
+                <button onclick="step(this,1)">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item: Towel Bath -->
+        <div class="item-card">
+          <div class="item-top">
+            <div class="item-name">Towel Bath</div>
+          </div>
+          <div class="item-ref">
+            <span class="item-ref-tag">Picked: 30</span>
+            <span class="item-ref-tag">In laundry: 30</span>
+          </div>
+          <div class="item-fields">
+            <div class="field-group">
+              <label class="deliver-label">Deliver Qty</label>
+              <div class="stepper deliver">
+                <button onclick="step(this,-1)">−</button>
+                <span class="stepper-val">25</span>
+                <button onclick="step(this,1)">+</button>
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="damage-label">Damaged</label>
+              <div class="stepper damage">
+                <button onclick="step(this,-1)">−</button>
+                <span class="stepper-val">0</span>
+                <button onclick="step(this,1)">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item: Pillow Cover -->
+        <div class="item-card">
+          <div class="item-top">
+            <div class="item-name">Pillow Cover</div>
+          </div>
+          <div class="item-ref">
+            <span class="item-ref-tag">Picked: 20</span>
+            <span class="item-ref-tag">In laundry: 20</span>
+          </div>
+          <div class="item-fields">
+            <div class="field-group">
+              <label class="deliver-label">Deliver Qty</label>
+              <div class="stepper deliver">
+                <button onclick="step(this,-1)">−</button>
+                <span class="stepper-val">20</span>
+                <button onclick="step(this,1)">+</button>
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="damage-label">Damaged</label>
+              <div class="stepper damage">
+                <button onclick="step(this,-1)">−</button>
+                <span class="stepper-val">1</span>
+                <button onclick="step(this,1)">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dept Subtotal -->
+        <div class="dept-subtotal">
+          <span class="deliver-count">90 delivering</span>
+          <span class="dmg-count">6 damaged</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Department 2: Restaurant [PIECE] -->
+    <div class="dept-section piece">
+      <div class="dept-header" onclick="toggleDept(this)">
+        <span class="chevron">▼</span>
+        <span class="dept-name">Restaurant</span>
+        <span class="badge badge-piece">PIECE</span>
+      </div>
+      <div class="dept-body">
+
+        <!-- Item Search -->
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="Search items...">
+        </div>
+
+        <!-- Item: Napkin -->
+        <div class="item-card">
+          <div class="item-top">
+            <div class="item-name">Napkin</div>
+          </div>
+          <div class="item-ref">
+            <span class="item-ref-tag">Picked: 500</span>
+            <span class="item-ref-tag">In laundry: 500</span>
+          </div>
+          <div class="item-fields">
+            <div class="field-group">
+              <label class="deliver-label">Deliver Qty</label>
+              <div class="stepper deliver">
+                <button onclick="step(this,-1)">−</button>
+                <span class="stepper-val">480</span>
+                <button onclick="step(this,1)">+</button>
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="damage-label">Damaged</label>
+              <div class="stepper damage">
+                <button onclick="step(this,-1)">−</button>
+                <span class="stepper-val">20</span>
+                <button onclick="step(this,1)">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item: Tablecloth -->
+        <div class="item-card">
+          <div class="item-top">
+            <div class="item-name">Tablecloth</div>
+          </div>
+          <div class="item-ref">
+            <span class="item-ref-tag">Picked: 50</span>
+            <span class="item-ref-tag">In laundry: 50</span>
+          </div>
+          <div class="item-fields">
+            <div class="field-group">
+              <label class="deliver-label">Deliver Qty</label>
+              <div class="stepper deliver">
+                <button onclick="step(this,-1)">−</button>
+                <span class="stepper-val">50</span>
+                <button onclick="step(this,1)">+</button>
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="damage-label">Damaged</label>
+              <div class="stepper damage">
+                <button onclick="step(this,-1)">−</button>
+                <span class="stepper-val">0</span>
+                <button onclick="step(this,1)">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dept Subtotal -->
+        <div class="dept-subtotal">
+          <span class="deliver-count">530 delivering</span>
+          <span class="dmg-count">20 damaged</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- Sticky Footer -->
+  <div class="sticky-footer">
+    <div class="summary-bar">
+      Total delivering: <span class="green-highlight">620</span> across <strong>2 depts</strong> · Damaged: <span class="dmg-highlight">26</span>
+    </div>
+    <button class="btn-submit">✓&ensp;SUBMIT DELIVERY</button>
+  </div>
+</div>
+
+<script>
+function step(btn, delta) {
+  var stepper = btn.closest('.stepper');
+  var valEl = stepper.querySelector('.stepper-val');
+  var cur = parseInt(valEl.textContent, 10) || 0;
+  var next = Math.max(0, cur + delta);
+  valEl.textContent = next;
+}
+
+function toggleDept(header) {
+  var body = header.nextElementSibling;
+  if (body.style.display === 'none') {
+    body.style.display = '';
+    header.classList.remove('collapsed');
+  } else {
+    body.style.display = 'none';
+    header.classList.add('collapsed');
+  }
+}
+
+function deliverAll() {
+  var cards = document.querySelectorAll('.item-card');
+  cards.forEach(function(card) {
+    var refs = card.querySelectorAll('.item-ref-tag');
+    if (refs.length > 0) {
+      var pickedText = refs[0].textContent;
+      var pickedQty = parseInt(pickedText.replace(/[^0-9]/g, ''), 10) || 0;
+      var steppers = card.querySelectorAll('.stepper');
+      if (steppers.length >= 1) {
+        steppers[0].querySelector('.stepper-val').textContent = pickedQty;
+      }
+      if (steppers.length >= 2) {
+        steppers[1].querySelector('.stepper-val').textContent = '0';
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>

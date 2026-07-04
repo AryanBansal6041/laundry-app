@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Damage Report — LaundroTrack</title>
+<style>
+  :root {
+    --primary: #1A237E;
+    --primary-light: #3949AB;
+    --accent: #00897B;
+    --pickup-blue: #1565C0;
+    --delivery-green: #2E7D32;
+    --damage-red: #C62828;
+    --damage-yellow: #F9A825;
+    --damage-green: #43A047;
+    --bg: #F5F5F5;
+    --card: #FFFFFF;
+    --text-primary: #212121;
+    --text-secondary: #757575;
+    --border: #E0E0E0;
+    --font: -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: #E8EAF6; min-height: 100vh; color: var(--text-primary); }
+
+  /* ===== Toggle ===== */
+  .viewport-toggle {
+    display: flex; justify-content: center; gap: 12px; padding: 20px;
+    background: var(--primary); position: sticky; top: 0; z-index: 100;
+  }
+  .viewport-toggle button {
+    padding: 8px 24px; border-radius: 20px; border: 2px solid rgba(255,255,255,0.3);
+    background: transparent; color: #fff; font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: var(--font); transition: all .2s;
+  }
+  .viewport-toggle button.active { background: #fff; color: var(--primary); border-color: #fff; }
+  .viewport-toggle button:hover:not(.active) { border-color: rgba(255,255,255,0.7); }
+
+  .views-container {
+    display: flex; justify-content: center; gap: 40px; padding: 32px 24px 40px;
+    flex-wrap: wrap; align-items: flex-start;
+  }
+  .view-label {
+    text-align: center; color: var(--text-secondary); font-size: 13px;
+    font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+  }
+
+  /* ===== Phone Frame ===== */
+  .phone-frame {
+    width: 390px; min-height: 780px; background: var(--bg); border-radius: 32px;
+    overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.18), 0 0 0 2px #333;
+    display: flex; flex-direction: column;
+  }
+  .phone-notch {
+    height: 34px; background: #000; border-radius: 0 0 20px 20px;
+    width: 150px; margin: 0 auto;
+  }
+
+  /* ===== Tablet Frame ===== */
+  .tablet-frame {
+    width: 900px; min-height: 640px; background: var(--bg); border-radius: 20px;
+    overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.18), 0 0 0 2px #444;
+    display: flex; flex-direction: row;
+  }
+
+  /* ===== App Bar ===== */
+  .app-bar {
+    background: var(--primary); color: #fff; padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .app-bar-title { font-size: 20px; font-weight: 700; }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: #fff;
+  }
+
+  .content { flex: 1; padding: 16px; overflow-y: auto; }
+
+  /* ===== Date Picker ===== */
+  .date-range-bar {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--card); border-radius: 12px; padding: 12px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 12px;
+    border: 1px solid var(--border); font-size: 14px; font-weight: 600;
+    cursor: pointer;
+  }
+  .date-range-bar .cal-icon { font-size: 16px; }
+  .date-range-bar .arrow { color: var(--primary-light); font-size: 16px; }
+
+  /* ===== Info Banner ===== */
+  .info-banner {
+    background: #E3F2FD; border-radius: 12px; padding: 12px 14px;
+    display: flex; gap: 10px; align-items: flex-start;
+    margin-bottom: 16px; border: 1px solid #BBDEFB;
+  }
+  .info-banner .info-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .info-banner .info-text { font-size: 13px; line-height: 1.5; color: #1565C0; }
+
+  /* ===== Section Header ===== */
+  .section-header {
+    font-size: 12px; font-weight: 700; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px;
+    margin-top: 8px;
+  }
+  .section-note {
+    font-size: 11px; font-weight: 400; color: var(--text-secondary);
+    text-transform: none; letter-spacing: 0; font-style: italic;
+  }
+
+  /* ===== Damage Card ===== */
+  .damage-item-card {
+    background: var(--card); border-radius: 12px; padding: 14px 16px;
+    margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    display: flex; align-items: center; justify-content: space-between;
+    border: 1px solid var(--border);
+  }
+  .damage-item-left { display: flex; align-items: center; gap: 12px; }
+  .damage-dot {
+    width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+  }
+  .damage-dot.red { background: var(--damage-red); }
+  .damage-dot.yellow { background: var(--damage-yellow); }
+  .damage-dot.green { background: var(--damage-green); }
+  .damage-item-name { font-size: 14px; font-weight: 600; }
+  .damage-count {
+    font-size: 20px; font-weight: 700; min-width: 40px; text-align: right;
+  }
+  .damage-count.red { color: var(--damage-red); }
+  .damage-count.yellow { color: var(--damage-yellow); }
+  .damage-count.green { color: var(--damage-green); }
+
+  /* ===== Bottom Nav ===== */
+  .bottom-nav {
+    display: flex; background: #fff; border-top: 1px solid var(--border);
+    padding: 6px 0 8px;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    gap: 2px; font-size: 10px; color: var(--text-secondary); cursor: pointer;
+    padding: 4px 0; font-weight: 500;
+  }
+  .nav-item.active { color: var(--primary); }
+  .nav-item .nav-icon { font-size: 20px; height: 24px; display: flex; align-items: center; }
+
+  /* ===== Navigation Rail ===== */
+  .nav-rail {
+    width: 72px; background: var(--primary); display: flex; flex-direction: column;
+    align-items: center; padding: 16px 0; flex-shrink: 0;
+  }
+  .rail-logo {
+    font-size: 24px; margin-bottom: 24px; width: 44px; height: 44px;
+    background: rgba(255,255,255,0.12); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .rail-item {
+    width: 100%; display: flex; flex-direction: column; align-items: center;
+    padding: 12px 4px; font-size: 10px; color: rgba(255,255,255,0.6);
+    cursor: pointer; transition: all .15s; gap: 4px; border-left: 3px solid transparent;
+    text-align: center;
+  }
+  .rail-item.active {
+    color: #fff; background: rgba(255,255,255,0.1);
+    border-left-color: var(--accent);
+  }
+  .rail-item:hover:not(.active) { color: rgba(255,255,255,0.85); }
+  .rail-item .rail-icon { font-size: 22px; }
+
+  /* ===== Tablet Content ===== */
+  .tablet-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .tablet-bar {
+    background: var(--primary); color: #fff; padding: 16px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .tablet-bar-title { font-size: 22px; font-weight: 700; }
+  .tablet-bar-right { display: flex; gap: 16px; align-items: center; }
+  .tablet-body { flex: 1; padding: 24px; overflow-y: auto; }
+
+  /* ===== Tablet Tables ===== */
+  .data-table {
+    width: 100%; border-collapse: collapse; background: var(--card);
+    border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .data-table thead { background: var(--bg); }
+  .data-table th {
+    padding: 12px 16px; text-align: left; font-size: 12px;
+    font-weight: 700; color: var(--text-secondary); text-transform: uppercase;
+    letter-spacing: 0.5px; border-bottom: 2px solid var(--border); cursor: pointer;
+  }
+  .data-table th:hover { color: var(--primary); }
+  .data-table td {
+    padding: 14px 16px; font-size: 14px; border-bottom: 1px solid var(--border);
+  }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  .data-table tbody tr:hover { background: #F8F9FF; }
+
+  .status-indicator {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+  }
+  .status-indicator .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .status-indicator .dot.red { background: var(--damage-red); }
+  .status-indicator .dot.yellow { background: var(--damage-yellow); }
+  .status-indicator .dot.green { background: var(--damage-green); }
+  .status-indicator.red { color: var(--damage-red); }
+  .status-indicator.yellow { color: #E65100; }
+  .status-indicator.green { color: var(--damage-green); }
+
+  .tablet-two-col {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- Viewport Toggle -->
+<div class="viewport-toggle">
+  <button class="active" onclick="toggle('mobile')">📱 Mobile</button>
+  <button onclick="toggle('tablet')">📱 Tablet</button>
+  <button onclick="toggle('both')">Both</button>
+</div>
+
+<div class="views-container">
+
+<!-- ======================== MOBILE VIEW ======================== -->
+<div id="mobile-view">
+  <div class="view-label">Mobile — 390 × 780</div>
+  <div class="phone-frame">
+    <div class="phone-notch"></div>
+
+    <div class="app-bar">
+      <div class="app-bar-title">Damage Report</div>
+      <div class="avatar">HS</div>
+    </div>
+
+    <div class="content">
+      <!-- Date Range -->
+      <div class="date-range-bar">
+        <span class="cal-icon">📅</span>
+        <span>Mar 1, 2026</span>
+        <span class="arrow">→</span>
+        <span>Mar 15, 2026</span>
+      </div>
+
+      <!-- Info Banner -->
+      <div class="info-banner">
+        <span class="info-icon">ℹ️</span>
+        <span class="info-text">
+          Net damage = delivery damage minus pickup damage. Only excess damage is attributed to the laundry.
+        </span>
+      </div>
+
+      <!-- Period Damage Summary -->
+      <div class="section-header">Period Damage Summary</div>
+
+      <div class="damage-item-card">
+        <div class="damage-item-left">
+          <div class="damage-dot red"></div>
+          <div class="damage-item-name">Napkin</div>
+        </div>
+        <div class="damage-count red">20</div>
+      </div>
+
+      <div class="damage-item-card">
+        <div class="damage-item-left">
+          <div class="damage-dot yellow"></div>
+          <div class="damage-item-name">Bedsheet King Size</div>
+        </div>
+        <div class="damage-count yellow">3</div>
+      </div>
+
+      <div class="damage-item-card">
+        <div class="damage-item-left">
+          <div class="damage-dot yellow"></div>
+          <div class="damage-item-name">Towel Bath</div>
+        </div>
+        <div class="damage-count yellow">2</div>
+      </div>
+
+      <div class="damage-item-card">
+        <div class="damage-item-left">
+          <div class="damage-dot green"></div>
+          <div class="damage-item-name">Pillow Cover</div>
+        </div>
+        <div class="damage-count green">0</div>
+      </div>
+
+      <!-- All-Time Totals -->
+      <div class="section-header" style="margin-top: 20px;">
+        All-Time Totals
+        <div class="section-note">(not affected by date filter)</div>
+      </div>
+
+      <div class="damage-item-card">
+        <div class="damage-item-left">
+          <div class="damage-dot red"></div>
+          <div class="damage-item-name">Napkin</div>
+        </div>
+        <div class="damage-count red">20</div>
+      </div>
+
+      <div class="damage-item-card">
+        <div class="damage-item-left">
+          <div class="damage-dot yellow"></div>
+          <div class="damage-item-name">Bedsheet King Size</div>
+        </div>
+        <div class="damage-count yellow">3</div>
+      </div>
+
+      <div class="damage-item-card">
+        <div class="damage-item-left">
+          <div class="damage-dot yellow"></div>
+          <div class="damage-item-name">Towel Bath</div>
+        </div>
+        <div class="damage-count yellow">2</div>
+      </div>
+
+      <div class="damage-item-card">
+        <div class="damage-item-left">
+          <div class="damage-dot green"></div>
+          <div class="damage-item-name">Bathrobe</div>
+        </div>
+        <div class="damage-count green">1</div>
+      </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <div class="bottom-nav">
+      <div class="nav-item">
+        <span class="nav-icon">📊</span>
+        Dashboard
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">📋</span>
+        Inventory
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">📄</span>
+        Challans
+      </div>
+      <div class="nav-item active">
+        <span class="nav-icon">🛡️</span>
+        Quality
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">💰</span>
+        Billing
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== TABLET VIEW ======================== -->
+<div id="tablet-view">
+  <div class="view-label">Tablet — 900 × 640</div>
+  <div class="tablet-frame">
+
+    <!-- Navigation Rail -->
+    <div class="nav-rail">
+      <div class="rail-logo">🧺</div>
+      <div class="rail-item">
+        <span class="rail-icon">📊</span>
+        Dashboard
+      </div>
+      <div class="rail-item">
+        <span class="rail-icon">📋</span>
+        Inventory
+      </div>
+      <div class="rail-item">
+        <span class="rail-icon">📄</span>
+        Challans
+      </div>
+      <div class="rail-item active">
+        <span class="rail-icon">🛡️</span>
+        Quality
+      </div>
+      <div class="rail-item">
+        <span class="rail-icon">💰</span>
+        Billing
+      </div>
+    </div>
+
+    <div class="tablet-content">
+      <div class="tablet-bar">
+        <div class="tablet-bar-title">Damage / Quality Control Report</div>
+        <div class="tablet-bar-right">
+          <div class="date-range-bar" style="margin: 0; box-shadow: none; border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff;">
+            <span class="cal-icon">📅</span>
+            <span>Mar 1, 2026</span>
+            <span class="arrow" style="color: rgba(255,255,255,0.7);">→</span>
+            <span>Mar 15, 2026</span>
+          </div>
+          <div class="avatar">HS</div>
+        </div>
+      </div>
+
+      <div class="tablet-body">
+        <!-- Info Banner -->
+        <div class="info-banner" style="margin-bottom: 24px;">
+          <span class="info-icon">ℹ️</span>
+          <span class="info-text">
+            Net damage = delivery damage minus pickup damage. Only excess damage is attributed to the laundry.
+          </span>
+        </div>
+
+        <!-- Two-column layout -->
+        <div class="tablet-two-col">
+          <!-- Period Damage Summary -->
+          <div>
+            <div class="section-header" style="margin-bottom: 16px;">Period Damage Summary</div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Item Name ↕</th>
+                  <th style="text-align: right;">Net Damage ↕</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <span class="status-indicator red">
+                      <span class="dot red"></span> High
+                    </span>
+                  </td>
+                  <td style="font-weight: 600;">Napkin</td>
+                  <td style="text-align: right; font-weight: 700; color: var(--damage-red);">20</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="status-indicator yellow">
+                      <span class="dot yellow"></span> Medium
+                    </span>
+                  </td>
+                  <td style="font-weight: 600;">Bedsheet King Size</td>
+                  <td style="text-align: right; font-weight: 700; color: #E65100;">3</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="status-indicator yellow">
+                      <span class="dot yellow"></span> Medium
+                    </span>
+                  </td>
+                  <td style="font-weight: 600;">Towel Bath</td>
+                  <td style="text-align: right; font-weight: 700; color: #E65100;">2</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="status-indicator green">
+                      <span class="dot green"></span> None
+                    </span>
+                  </td>
+                  <td style="font-weight: 600;">Pillow Cover</td>
+                  <td style="text-align: right; font-weight: 700; color: var(--damage-green);">0</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- All-Time Totals -->
+          <div>
+            <div class="section-header" style="margin-bottom: 4px;">All-Time Totals</div>
+            <div class="section-note" style="margin-bottom: 12px;">(not affected by date filter)</div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Item Name ↕</th>
+                  <th style="text-align: right;">Total Damage ↕</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <span class="status-indicator red">
+                      <span class="dot red"></span> High
+                    </span>
+                  </td>
+                  <td style="font-weight: 600;">Napkin</td>
+                  <td style="text-align: right; font-weight: 700; color: var(--damage-red);">20</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="status-indicator yellow">
+                      <span class="dot yellow"></span> Medium
+                    </span>
+                  </td>
+                  <td style="font-weight: 600;">Bedsheet King Size</td>
+                  <td style="text-align: right; font-weight: 700; color: #E65100;">3</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="status-indicator yellow">
+                      <span class="dot yellow"></span> Medium
+                    </span>
+                  </td>
+                  <td style="font-weight: 600;">Towel Bath</td>
+                  <td style="text-align: right; font-weight: 700; color: #E65100;">2</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="status-indicator green">
+                      <span class="dot green"></span> Low
+                    </span>
+                  </td>
+                  <td style="font-weight: 600;">Bathrobe</td>
+                  <td style="text-align: right; font-weight: 700; color: var(--damage-green);">1</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function toggle(view) {
+  const mobile = document.getElementById('mobile-view');
+  const tablet = document.getElementById('tablet-view');
+  const btns = document.querySelectorAll('.viewport-toggle button');
+  btns.forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  if (view === 'mobile') { mobile.classList.remove('hidden'); tablet.classList.add('hidden'); }
+  else if (view === 'tablet') { mobile.classList.add('hidden'); tablet.classList.remove('hidden'); }
+  else { mobile.classList.remove('hidden'); tablet.classList.remove('hidden'); }
+}
+</script>
+</body>
+</html>

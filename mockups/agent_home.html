@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaundroTrack — Agent Home</title>
+<style>
+  :root {
+    --primary: #1A237E;
+    --primary-light: #3949AB;
+    --accent: #00897B;
+    --pickup-blue: #1565C0;
+    --delivery-green: #2E7D32;
+    --damage-red: #C62828;
+    --damage-yellow: #F9A825;
+    --damage-green: #43A047;
+    --bg: #F5F5F5;
+    --card: #FFFFFF;
+    --text-primary: #212121;
+    --text-secondary: #757575;
+    --border: #E0E0E0;
+    --font: -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font);
+    background: #e0e0e0;
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex; justify-content: center; align-items: center;
+    padding: 24px 16px;
+  }
+
+  .view-toggle {
+    position: fixed; top: 12px; right: 12px; z-index: 9999;
+    background: var(--primary); color: #fff;
+    border: none; border-radius: 8px; padding: 8px 16px;
+    font-size: 13px; font-family: var(--font); cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .view-toggle:hover { background: var(--primary-light); }
+
+  .phone-frame {
+    width: 100%; max-width: 420px;
+    min-height: 780px; max-height: 860px;
+    background: var(--bg);
+    border-radius: 36px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.15), 0 0 0 4px #222;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    position: relative;
+  }
+  .notch {
+    width: 140px; height: 28px;
+    background: #222; border-radius: 0 0 16px 16px;
+    margin: 0 auto; flex-shrink: 0;
+  }
+
+  /* Offline banner */
+  .offline-banner {
+    background: var(--damage-red); color: #fff;
+    text-align: center; font-size: 13px; font-weight: 600;
+    padding: 6px 0;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: max-height .3s, padding .3s, opacity .3s;
+    max-height: 40px; overflow: hidden;
+    flex-shrink: 0;
+  }
+  .offline-banner.hidden {
+    max-height: 0; padding: 0; opacity: 0;
+  }
+  .offline-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #fff; opacity: 0.8;
+    animation: blink 1.5s infinite;
+  }
+  @keyframes blink { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+  /* App bar */
+  .app-bar {
+    background: var(--primary);
+    padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .app-bar-title {
+    color: #fff; font-size: 20px; font-weight: 700; letter-spacing: -0.3px;
+  }
+  .app-bar-actions { display: flex; align-items: center; gap: 12px; }
+  .icon-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; color: #fff; font-size: 18px;
+  }
+  .icon-btn:hover { background: rgba(255,255,255,0.2); }
+  .notif-badge {
+    position: absolute; top: 2px; right: 2px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--damage-red); color: #fff;
+    font-size: 10px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--delivery-green));
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 14px; font-weight: 700;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+
+  /* Content area */
+  .content {
+    flex: 1; overflow-y: auto; padding: 20px 18px 90px;
+  }
+
+  .greeting { margin-bottom: 20px; }
+  .greeting h2 { font-size: 22px; font-weight: 700; }
+  .greeting p { font-size: 14px; color: var(--text-secondary); margin-top: 2px; }
+
+  /* Sync card */
+  .sync-card {
+    background: #FFF8E1; border: 1px solid #FFE082;
+    border-radius: 12px; padding: 14px 16px;
+    margin-bottom: 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+    transition: box-shadow .2s;
+  }
+  .sync-card:hover { box-shadow: 0 2px 12px rgba(249,168,37,0.2); }
+  .sync-left { display: flex; align-items: center; gap: 10px; }
+  .sync-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--damage-yellow); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700;
+  }
+  .sync-text { font-size: 14px; font-weight: 600; color: #E65100; }
+  .sync-text span { font-weight: 400; }
+  .sync-arrow { color: #E65100; font-size: 18px; font-weight: 700; }
+
+  /* Section */
+  .section-title {
+    font-size: 13px; font-weight: 700;
+    color: var(--text-secondary); letter-spacing: 0.8px;
+    text-transform: uppercase; margin-bottom: 14px;
+  }
+
+  /* Hotel cards */
+  .hotel-card {
+    background: var(--card); border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 18px; margin-bottom: 14px;
+    border: 1px solid var(--border);
+    transition: box-shadow .2s, transform .1s;
+  }
+  .hotel-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    transform: translateY(-1px);
+  }
+  .hotel-header {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; margin-bottom: 12px;
+  }
+  .hotel-name { font-size: 17px; font-weight: 700; }
+  .hotel-address { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+  }
+  .badge-red {
+    background: #FFEBEE; color: var(--damage-red);
+  }
+  .badge-green {
+    background: #E8F5E9; color: var(--delivery-green);
+  }
+
+  .hotel-actions {
+    display: flex; gap: 10px; margin-top: 14px;
+  }
+  .btn {
+    flex: 1; height: 40px; border-radius: 10px;
+    font-size: 14px; font-weight: 600;
+    font-family: var(--font); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: background .2s, transform .1s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-filled {
+    background: var(--pickup-blue); color: #fff; border: none;
+    box-shadow: 0 2px 8px rgba(21,101,192,0.25);
+  }
+  .btn-filled:hover { background: #1976D2; }
+  .btn-outlined {
+    background: transparent; color: var(--pickup-blue);
+    border: 1.5px solid var(--pickup-blue);
+  }
+  .btn-outlined:hover { background: rgba(21,101,192,0.06); }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 68px;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    display: flex;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+    border-radius: 0 0 36px 36px;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 3px;
+    cursor: pointer; border: none; background: none;
+    color: var(--text-secondary); font-size: 11px; font-weight: 600;
+    font-family: var(--font);
+    transition: color .2s;
+  }
+  .nav-item.active { color: var(--primary); }
+  .nav-icon { font-size: 22px; }
+
+  /* Demo toggle button */
+  .demo-toggle {
+    position: fixed; top: 12px; left: 12px; z-index: 9999;
+    background: var(--damage-red); color: #fff;
+    border: none; border-radius: 8px; padding: 8px 14px;
+    font-size: 12px; font-family: var(--font); cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .demo-toggle:hover { opacity: 0.9; }
+</style>
+</head>
+<body>
+
+<button class="demo-toggle" onclick="toggleOffline()">Toggle Offline</button>
+<button class="view-toggle" onclick="location.reload()">Refresh</button>
+
+<div class="phone-frame">
+  <div class="notch"></div>
+
+  <!-- Offline Banner -->
+  <div class="offline-banner" id="offlineBanner">
+    <div class="offline-dot"></div>
+    Offline — Changes will sync when connected
+  </div>
+
+  <!-- App Bar -->
+  <div class="app-bar">
+    <div class="app-bar-title">LaundroTrack</div>
+    <div class="app-bar-actions">
+      <button class="icon-btn">
+        🔔
+        <div class="notif-badge">3</div>
+      </button>
+      <div class="avatar">RK</div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <div class="greeting">
+      <h2>Hello, Rajesh 👋</h2>
+      <p>Service Agent</p>
+    </div>
+
+    <!-- Pending Sync -->
+    <div class="sync-card">
+      <div class="sync-left">
+        <div class="sync-icon">⟳</div>
+        <div class="sync-text">2 challans awaiting sync <span>— View</span></div>
+      </div>
+      <div class="sync-arrow">›</div>
+    </div>
+
+    <!-- Hotels -->
+    <div class="section-title">Your Hotels</div>
+
+    <div class="hotel-card">
+      <div class="hotel-header">
+        <div>
+          <div class="hotel-name">Hotel Sunrise</div>
+          <div class="hotel-address">📍 123 MG Road</div>
+        </div>
+        <div class="badge badge-red">3 pending deliveries</div>
+      </div>
+      <div class="hotel-actions">
+        <button class="btn btn-filled">
+          <span>📦</span> New Pickup
+        </button>
+        <button class="btn btn-outlined">
+          Pending
+        </button>
+      </div>
+    </div>
+
+    <div class="hotel-card">
+      <div class="hotel-header">
+        <div>
+          <div class="hotel-name">Hotel Grand</div>
+          <div class="hotel-address">📍 45 Park Street</div>
+        </div>
+        <div class="badge badge-green">0 pending</div>
+      </div>
+      <div class="hotel-actions">
+        <button class="btn btn-filled">
+          <span>📦</span> New Pickup
+        </button>
+        <button class="btn btn-outlined">
+          Pending
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <button class="nav-item active">
+      <span class="nav-icon">🏠</span>
+      Home
+    </button>
+    <button class="nav-item">
+      <span class="nav-icon">📋</span>
+      History
+    </button>
+    <button class="nav-item">
+      <span class="nav-icon">⚙️</span>
+      Settings
+    </button>
+  </div>
+</div>
+
+<script>
+function toggleOffline() {
+  document.getElementById('offlineBanner').classList.toggle('hidden');
+}
+</script>
+</body>
+</html>

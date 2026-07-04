@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaundroTrack — Items</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; background: #F5F5F5; color: #212121; display: flex; min-height: 100vh; }
+
+  .sidebar { width: 220px; min-height: 100vh; background: #1A237E; color: #fff; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+  .sidebar-logo { padding: 24px 20px 20px; font-size: 20px; font-weight: 700; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .sidebar-nav { flex: 1; padding: 12px 0; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 20px; font-size: 14px; color: rgba(255,255,255,0.7); cursor: pointer; transition: all 0.15s; text-decoration: none; }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-item.active { background: #3949AB; color: #fff; font-weight: 600; }
+  .nav-icon { width: 20px; text-align: center; font-size: 16px; }
+
+  .main { margin-left: 220px; flex: 1; min-height: 100vh; }
+  .topbar { background: #fff; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E0E0E0; }
+  .breadcrumb { font-size: 20px; font-weight: 600; }
+  .topbar-right { display: flex; align-items: center; gap: 20px; }
+  .notif-bell { font-size: 20px; cursor: pointer; position: relative; }
+  .notif-badge { position: absolute; top: -4px; right: -6px; background: #C62828; color: #fff; font-size: 10px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .profile { font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .profile-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1A237E; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }
+
+  .content { padding: 28px 32px; }
+
+  /* Two-panel layout */
+  .two-panel { display: grid; grid-template-columns: 40% 60%; gap: 20px; align-items: start; }
+
+  .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .card-header { padding: 18px 24px 14px; font-size: 16px; font-weight: 600; border-bottom: 1px solid #E0E0E0; display: flex; align-items: center; justify-content: space-between; }
+  .card-body { padding: 0; }
+
+  .btn { padding: 8px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-primary { background: #1A237E; color: #fff; }
+  .btn-primary:hover { background: #3949AB; }
+  .btn-secondary { background: #fff; color: #212121; border: 1px solid #E0E0E0; }
+  .btn-secondary:hover { background: #F5F5F5; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 12px; font-weight: 600; color: #757575; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 16px; border-bottom: 2px solid #E0E0E0; }
+  td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid #F0F0F0; }
+  tr:hover td { background: #FAFAFA; }
+  .text-muted { color: #757575; }
+
+  /* Items list */
+  .item-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid #F0F0F0; transition: background 0.1s; cursor: pointer; }
+  .item-row:hover { background: #F8F9FF; }
+  .item-row:last-child { border-bottom: none; }
+  .item-name { font-size: 14px; font-weight: 500; }
+  .item-date { font-size: 12px; color: #757575; }
+  .item-icon { width: 36px; height: 36px; border-radius: 8px; background: #E8EAF6; color: #1A237E; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-right: 12px; flex-shrink: 0; }
+  .item-info { display: flex; align-items: center; }
+
+  /* Dept selector */
+  .dept-selector { padding: 16px 20px; border-bottom: 1px solid #E0E0E0; }
+  .dept-select { width: 100%; padding: 10px 14px; border: 1px solid #E0E0E0; border-radius: 8px; font-size: 13px; outline: none; background: #fff; }
+  .dept-select:focus { border-color: #1A237E; box-shadow: 0 0 0 3px rgba(26,35,126,0.1); }
+
+  .chip { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+  .chip-weight { background: #E8EAF6; color: #1A237E; }
+
+  .btn-danger-ghost { background: none; border: none; color: #C62828; font-weight: 600; cursor: pointer; font-size: 12px; }
+  .btn-danger-ghost:hover { text-decoration: underline; }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: #757575; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; }
+  .modal { background: #fff; border-radius: 12px; width: 460px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+  .modal-header { padding: 20px 24px 16px; font-size: 18px; font-weight: 700; border-bottom: 1px solid #E0E0E0; display: flex; justify-content: space-between; align-items: center; }
+  .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #757575; }
+  .modal-body { padding: 20px 24px; }
+  .form-group { margin-bottom: 18px; }
+  .form-label { display: block; font-size: 13px; font-weight: 600; color: #212121; margin-bottom: 6px; }
+  .form-input, .form-select { width: 100%; padding: 10px 14px; border: 1px solid #E0E0E0; border-radius: 8px; font-size: 14px; outline: none; background: #fff; }
+  .form-input:focus, .form-select:focus { border-color: #1A237E; box-shadow: 0 0 0 3px rgba(26,35,126,0.1); }
+  .modal-footer { padding: 16px 24px 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #E0E0E0; }
+  .form-note { font-size: 12px; color: #757575; margin-top: 6px; padding: 8px 12px; background: #FFF8E1; border-radius: 6px; border-left: 3px solid #F9A825; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">🧺 LaundroTrack</div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="admin_dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+    <a class="nav-item" href="admin_hotels.html"><span class="nav-icon">🏨</span> Hotels</a>
+    <a class="nav-item active" href="admin_items.html"><span class="nav-icon">👔</span> Items</a>
+    <a class="nav-item" href="admin_users.html"><span class="nav-icon">👥</span> Users</a>
+    <a class="nav-item" href="admin_agent_mapping.html"><span class="nav-icon">🔗</span> Agent Mapping</a>
+    <a class="nav-item" href="#"><span class="nav-icon">✅</span> Quality</a>
+    <a class="nav-item" href="admin_billing.html"><span class="nav-icon">📈</span> Reports</a>
+    <a class="nav-item" href="#"><span class="nav-icon">⚙️</span> Settings</a>
+  </nav>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="breadcrumb">Items</div>
+    <div class="topbar-right">
+      <div class="notif-bell">🔔<span class="notif-badge">3</span></div>
+      <div class="profile"><span class="profile-avatar">A</span> Admin ▼</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="two-panel">
+      <!-- Left Panel: Items Master -->
+      <div class="card">
+        <div class="card-header">
+          Items Master <span style="color:#757575;font-weight:400;">(8)</span>
+          <button class="btn btn-primary btn-sm">+ Add Item</button>
+        </div>
+        <div class="card-body">
+          <div class="item-row">
+            <div class="item-info"><div class="item-icon">🛏️</div><div><div class="item-name">Bedsheet King Size</div><div class="item-date">Jan 15, 2026</div></div></div>
+          </div>
+          <div class="item-row">
+            <div class="item-info"><div class="item-icon">🛏️</div><div><div class="item-name">Bedsheet Queen</div><div class="item-date">Jan 15, 2026</div></div></div>
+          </div>
+          <div class="item-row">
+            <div class="item-info"><div class="item-icon">🧴</div><div><div class="item-name">Towel Bath</div><div class="item-date">Jan 18, 2026</div></div></div>
+          </div>
+          <div class="item-row">
+            <div class="item-info"><div class="item-icon">🧴</div><div><div class="item-name">Towel Hand</div><div class="item-date">Jan 18, 2026</div></div></div>
+          </div>
+          <div class="item-row">
+            <div class="item-info"><div class="item-icon">🛋️</div><div><div class="item-name">Pillow Cover</div><div class="item-date">Jan 20, 2026</div></div></div>
+          </div>
+          <div class="item-row">
+            <div class="item-info"><div class="item-icon">🛋️</div><div><div class="item-name">Duvet Cover</div><div class="item-date">Feb 01, 2026</div></div></div>
+          </div>
+          <div class="item-row">
+            <div class="item-info"><div class="item-icon">🍽️</div><div><div class="item-name">Napkin</div><div class="item-date">Feb 05, 2026</div></div></div>
+          </div>
+          <div class="item-row">
+            <div class="item-info"><div class="item-icon">🥋</div><div><div class="item-name">Bathrobe</div><div class="item-date">Feb 10, 2026</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Department-Item Linking -->
+      <div class="card">
+        <div class="card-header">
+          Department-Item Linking
+        </div>
+        <div class="dept-selector">
+          <select class="dept-select">
+            <option selected>Housekeeping — Hotel Sunrise [WEIGHT]</option>
+            <option>Restaurant — Hotel Sunrise [PIECE]</option>
+            <option>Spa — Hotel Sunrise [WEIGHT]</option>
+            <option>Housekeeping — Hotel Grand [WEIGHT]</option>
+          </select>
+        </div>
+        <div style="padding:14px 20px 8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:13px;color:#757575;">Linked Items <span style="font-weight:600;color:#212121;">(3)</span></div>
+            <button class="btn btn-primary btn-sm">+ Link Item</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <table>
+            <thead>
+              <tr><th>Item Name</th><th>Calc. Weight (kg)</th><th style="width:100px;">Actions</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="font-weight:500;">Bedsheet King Size</td>
+                <td><span style="font-weight:600;">1.50</span> <span class="text-muted">kg</span></td>
+                <td><button class="btn-danger-ghost">✕ Unlink</button></td>
+              </tr>
+              <tr>
+                <td style="font-weight:500;">Towel Bath</td>
+                <td><span style="font-weight:600;">0.60</span> <span class="text-muted">kg</span></td>
+                <td><button class="btn-danger-ghost">✕ Unlink</button></td>
+              </tr>
+              <tr>
+                <td style="font-weight:500;">Pillow Cover</td>
+                <td><span style="font-weight:600;">0.40</span> <span class="text-muted">kg</span></td>
+                <td><button class="btn-danger-ghost">✕ Unlink</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Link Item Modal -->
+<div class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      Link Item
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Item</label>
+        <select class="form-select">
+          <option>Select item from master...</option>
+          <option>Bedsheet Queen</option>
+          <option>Towel Hand</option>
+          <option selected>Duvet Cover</option>
+          <option>Napkin</option>
+          <option>Bathrobe</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Calculated Weight (kg)</label>
+        <input class="form-input" type="number" step="0.01" placeholder="e.g. 1.20" value="2.00">
+      </div>
+      <div class="form-note">
+        💡 For <strong>PIECE</strong> departments, this field changes to <strong>Price per Piece (₹)</strong>.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary">Cancel</button>
+      <button class="btn btn-primary">Link Item</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

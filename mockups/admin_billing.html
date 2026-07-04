@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaundroTrack — Billing Reports</title>
+<style>
+  :root {
+    --primary: #1A237E;
+    --primary-light: #3949AB;
+    --accent: #00897B;
+    --pickup-blue: #1565C0;
+    --delivery-green: #2E7D32;
+    --damage-red: #C62828;
+    --bg: #F5F5F5;
+    --card: #FFFFFF;
+    --text-primary: #212121;
+    --text-secondary: #757575;
+    --border: #E0E0E0;
+    --fresh-blue: #0277BD;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text-primary); display: flex; min-height: 100vh; }
+
+  /* ── Sidebar ── */
+  .sidebar { width: 220px; min-height: 100vh; background: var(--primary); color: #fff; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+  .sidebar-logo { padding: 24px 20px 20px; font-size: 20px; font-weight: 700; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .sidebar-nav { flex: 1; padding: 12px 0; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 20px; font-size: 14px; color: rgba(255,255,255,0.7); cursor: pointer; transition: all 0.15s; text-decoration: none; }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-item.active { background: var(--primary-light); color: #fff; font-weight: 600; }
+  .nav-icon { width: 20px; text-align: center; font-size: 16px; }
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 12px; color: rgba(255,255,255,0.4); }
+
+  /* ── Main ── */
+  .main { margin-left: 220px; flex: 1; min-height: 100vh; }
+
+  .topbar { background: var(--card); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+  .topbar-left .page-title { font-size: 22px; font-weight: 700; color: var(--text-primary); }
+  .topbar-left .breadcrumb { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .breadcrumb a { color: var(--primary-light); text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .topbar-right { display: flex; align-items: center; gap: 20px; }
+  .notif-bell { font-size: 20px; cursor: pointer; position: relative; }
+  .notif-badge { position: absolute; top: -4px; right: -6px; background: var(--damage-red); color: #fff; font-size: 10px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .profile { font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .profile-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }
+
+  .content { padding: 28px 32px; }
+
+  /* ── Filter Bar ── */
+  .filter-bar { background: var(--card); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); padding: 18px 24px; margin-bottom: 24px; display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap; }
+  .filter-group { display: flex; flex-direction: column; gap: 5px; }
+  .filter-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .filter-input, .filter-select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; background: var(--card); color: var(--text-primary); height: 36px; }
+  .filter-input:focus, .filter-select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(26,35,126,0.1); }
+
+  /* Weight Mode Toggle */
+  .toggle-group { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; height: 36px; }
+  .toggle-btn { padding: 0 14px; font-size: 12px; font-weight: 600; border: none; background: var(--card); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; letter-spacing: 0.3px; border-right: 1px solid var(--border); }
+  .toggle-btn:last-child { border-right: none; }
+  .toggle-btn.active { background: var(--primary); color: #fff; }
+  .toggle-btn:hover:not(.active) { background: #F0F0F0; }
+
+  /* View Toggle (pill tabs) */
+  .pill-tabs { display: flex; border: 2px solid var(--primary); border-radius: 8px; overflow: hidden; height: 36px; }
+  .pill-tab { padding: 0 18px; font-size: 13px; font-weight: 600; border: none; background: var(--card); color: var(--primary); cursor: pointer; transition: all 0.15s; }
+  .pill-tab.active { background: var(--primary); color: #fff; }
+  .pill-tab:hover:not(.active) { background: rgba(26,35,126,0.05); }
+
+  .filter-spacer { flex: 1; }
+
+  .btn { padding: 8px 18px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; height: 36px; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-light); }
+  .btn-export { background: var(--accent); color: #fff; }
+  .btn-export:hover { opacity: 0.9; }
+
+  /* ── Content Layout ── */
+  .content-layout { display: flex; gap: 24px; align-items: flex-start; }
+  .content-main { flex: 1; min-width: 0; }
+  .content-side { width: 300px; flex-shrink: 0; }
+
+  /* ── Hotel Accordion ── */
+  .hotel-section { background: var(--card); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 16px; overflow: hidden; }
+  .hotel-header { padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: background 0.15s; user-select: none; }
+  .hotel-header:hover { background: #FAFAFA; }
+  .hotel-name { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .hotel-name .chevron { font-size: 12px; color: var(--text-secondary); transition: transform 0.2s; }
+  .hotel-section.open .hotel-name .chevron { transform: rotate(90deg); }
+  .hotel-total { font-size: 20px; font-weight: 700; color: var(--primary); }
+  .hotel-body { display: none; border-top: 1px solid var(--border); }
+  .hotel-section.open .hotel-body { display: block; }
+
+  /* Department */
+  .dept-block { padding: 16px 24px; border-bottom: 1px solid #F0F0F0; }
+  .dept-block:last-child { border-bottom: none; }
+  .dept-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .dept-name { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+  .dept-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.3px; }
+  .badge-weight { background: #E8EAF6; color: var(--primary); }
+  .badge-piece { background: #E0F2F1; color: var(--accent); }
+  .badge-mode { background: #FFF3E0; color: #E65100; }
+
+  /* Weight lines */
+  .weight-lines { display: flex; flex-direction: column; gap: 6px; }
+  .weight-line { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 6px 10px; border-radius: 6px; }
+  .weight-line.active { background: #E8F5E9; font-weight: 600; color: var(--text-primary); }
+  .weight-line.dimmed { color: var(--text-secondary); opacity: 0.7; }
+  .weight-line.fresh-line { color: var(--fresh-blue); }
+  .weight-line.fresh-line.dimmed { opacity: 0.7; }
+  .weight-check { font-size: 16px; width: 20px; text-align: center; }
+  .weight-check.active { color: var(--delivery-green); }
+  .weight-check.inactive { color: #BDBDBD; }
+  .weight-label { width: 80px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .weight-calc { flex: 1; }
+  .weight-amount { font-weight: 700; min-width: 80px; text-align: right; }
+
+  /* Piece items */
+  .piece-table { width: 100%; font-size: 13px; border-collapse: collapse; }
+  .piece-table th { text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 6px 0; border-bottom: 1px solid #F0F0F0; }
+  .piece-table td { padding: 8px 0; border-bottom: 1px solid #F5F5F5; }
+  .piece-table td:last-child { text-align: right; font-weight: 600; }
+
+  /* Damage & totals */
+  .hotel-subtotal-row { padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; background: #FAFAFA; }
+  .damage-row { padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+  .damage-label { color: var(--damage-red); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .damage-amount { color: var(--damage-red); font-weight: 700; }
+  .subtotal-label { font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+  .subtotal-amount { font-size: 18px; font-weight: 700; color: var(--primary); }
+
+  /* ── Leaderboard ── */
+  .leaderboard { background: var(--card); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); padding: 20px; }
+  .leaderboard-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .lb-item { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .lb-rank { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; }
+  .lb-rank-1 { background: #FFA000; }
+  .lb-rank-2 { background: #78909C; }
+  .lb-rank-3 { background: #8D6E63; }
+  .lb-info { flex: 1; }
+  .lb-hotel { font-size: 13px; font-weight: 600; }
+  .lb-bar-bg { height: 8px; background: #ECEFF1; border-radius: 4px; margin-top: 4px; overflow: hidden; }
+  .lb-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+  .lb-amount { font-size: 14px; font-weight: 700; color: var(--primary); min-width: 80px; text-align: right; }
+
+  /* ── Grand Total ── */
+  .grand-total { background: var(--primary); border-radius: 12px; padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; margin-top: 24px; box-shadow: 0 4px 16px rgba(26,35,126,0.3); }
+  .grand-total-label { font-size: 16px; font-weight: 600; color: rgba(255,255,255,0.85); }
+  .grand-total-amount { font-size: 32px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+
+  /* ── Detailed View ── */
+  #detailed-view { display: none; }
+  #detailed-view.visible { display: block; }
+  #summary-view.hidden { display: none; }
+
+  .challan-card { background: var(--card); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 14px; overflow: hidden; }
+  .challan-header { padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0F0F0; }
+  .challan-id { font-size: 14px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+  .challan-type-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.3px; }
+  .badge-pickup { background: #E3F2FD; color: var(--pickup-blue); }
+  .badge-delivery { background: #E8F5E9; color: var(--delivery-green); }
+  .challan-meta { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 12px; }
+  .challan-body { padding: 14px 20px; }
+  .challan-line { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; border-bottom: 1px solid #F8F8F8; }
+  .challan-line:last-child { border-bottom: none; }
+  .challan-line-label { color: var(--text-secondary); }
+  .challan-line-calc { flex: 1; text-align: center; color: var(--text-secondary); font-size: 12px; }
+  .challan-line-amount { font-weight: 600; min-width: 80px; text-align: right; }
+  .challan-footer { padding: 12px 20px; background: #FAFAFA; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #F0F0F0; }
+  .challan-total-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+  .challan-total-amount { font-size: 16px; font-weight: 700; color: var(--primary); }
+
+  .hotel-detail-section { margin-bottom: 24px; }
+  .hotel-detail-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); }
+
+  /* Print */
+  .btn-print { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+  .btn-print:hover { background: #F5F5F5; color: var(--text-primary); }
+</style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">🧺 LaundroTrack</div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📊</span> Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">🏨</span> Hotels
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">👕</span> Items
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">👤</span> Users
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">🔗</span> Agent Mappings
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">✅</span> Quality
+    </a>
+    <a class="nav-item active" href="#">
+      <span class="nav-icon">📋</span> Reports
+    </a>
+  </nav>
+  <div class="sidebar-footer">LaundroTrack ERP v2.0</div>
+</aside>
+
+<!-- ── Main ── -->
+<div class="main">
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="page-title">Billing Reports</div>
+      <div class="breadcrumb"><a href="#">Dashboard</a> &rsaquo; Reports</div>
+    </div>
+    <div class="topbar-right">
+      <span class="notif-bell">🔔<span class="notif-badge">3</span></span>
+      <div class="profile">
+        <div class="profile-avatar">SA</div>
+        Super Admin
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- ── Filter Bar ── -->
+    <div class="filter-bar">
+      <div class="filter-group">
+        <span class="filter-label">Date Range</span>
+        <input class="filter-input" type="text" value="Mar 1 – Mar 15, 2026" style="width: 200px; cursor: pointer;" readonly>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Hotel</span>
+        <select class="filter-select" style="min-width: 160px;">
+          <option selected>All Hotels</option>
+          <option>Hotel Sunrise</option>
+          <option>Hotel Grand</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Weight Mode</span>
+        <div class="toggle-group" id="weight-toggle">
+          <button class="toggle-btn active" data-mode="soiled" onclick="setWeightMode(this)">SOILED</button>
+          <button class="toggle-btn" data-mode="calculated" onclick="setWeightMode(this)">CALCULATED</button>
+          <button class="toggle-btn" data-mode="fresh" onclick="setWeightMode(this)">FRESH</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">View</span>
+        <div class="pill-tabs">
+          <button class="pill-tab active" id="tab-summary" onclick="switchView('summary')">Summary</button>
+          <button class="pill-tab" id="tab-detailed" onclick="switchView('detailed')">Detailed</button>
+        </div>
+      </div>
+      <div class="filter-spacer"></div>
+      <button class="btn btn-export" onclick="">⬇ Export PDF</button>
+      <button class="btn btn-print" onclick="">🖨 Print</button>
+    </div>
+
+    <!-- ═══════════════ SUMMARY VIEW ═══════════════ -->
+    <div id="summary-view">
+      <div class="content-layout">
+        <div class="content-main">
+
+          <!-- Hotel Sunrise -->
+          <div class="hotel-section open" id="hotel-sunrise">
+            <div class="hotel-header" onclick="toggleHotel('hotel-sunrise')">
+              <div class="hotel-name">
+                <span class="chevron">▶</span>
+                🏨 Hotel Sunrise
+              </div>
+              <div class="hotel-total">₹607.00</div>
+            </div>
+            <div class="hotel-body">
+              <!-- Housekeeping — WEIGHT · SOILED -->
+              <div class="dept-block">
+                <div class="dept-header">
+                  <span class="dept-name">Housekeeping</span>
+                  <span class="dept-badge badge-weight">WEIGHT</span>
+                  <span class="dept-badge badge-mode">SOILED</span>
+                </div>
+                <div class="weight-lines">
+                  <div class="weight-line active">
+                    <span class="weight-check active">✅</span>
+                    <span class="weight-label">Soiled</span>
+                    <span class="weight-calc">45.0 kg × ₹3.00</span>
+                    <span class="weight-amount">₹135.00</span>
+                  </div>
+                  <div class="weight-line dimmed">
+                    <span class="weight-check inactive">○</span>
+                    <span class="weight-label">Calculated</span>
+                    <span class="weight-calc">61.5 kg × ₹3.00</span>
+                    <span class="weight-amount">₹184.50</span>
+                  </div>
+                  <div class="weight-line dimmed fresh-line">
+                    <span class="weight-check inactive">○</span>
+                    <span class="weight-label" style="color: var(--fresh-blue);">Fresh</span>
+                    <span class="weight-calc">43.0 kg × ₹3.00</span>
+                    <span class="weight-amount" style="color: var(--fresh-blue);">₹129.00</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Restaurant — PIECE -->
+              <div class="dept-block">
+                <div class="dept-header">
+                  <span class="dept-name">Restaurant</span>
+                  <span class="dept-badge badge-piece">PIECE</span>
+                </div>
+                <table class="piece-table">
+                  <thead>
+                    <tr><th>Item</th><th>Qty</th><th>Rate</th><th style="text-align:right;">Amount</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Napkin</td><td>500</td><td>₹0.75</td><td>₹375.00</td></tr>
+                    <tr><td>Tablecloth</td><td>50</td><td>₹2.00</td><td>₹100.00</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Damage -->
+              <div class="damage-row">
+                <span class="damage-label">⚠ Damage Deduction</span>
+                <span class="damage-amount">−₹3.00</span>
+              </div>
+
+              <!-- Hotel Total -->
+              <div class="hotel-subtotal-row">
+                <span class="subtotal-label">Hotel Total</span>
+                <span class="subtotal-amount">₹607.00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hotel Grand -->
+          <div class="hotel-section open" id="hotel-grand">
+            <div class="hotel-header" onclick="toggleHotel('hotel-grand')">
+              <div class="hotel-name">
+                <span class="chevron">▶</span>
+                🏨 Hotel Grand
+              </div>
+              <div class="hotel-total">₹79.00</div>
+            </div>
+            <div class="hotel-body">
+              <!-- Spa — WEIGHT · SOILED -->
+              <div class="dept-block">
+                <div class="dept-header">
+                  <span class="dept-name">Spa</span>
+                  <span class="dept-badge badge-weight">WEIGHT</span>
+                  <span class="dept-badge badge-mode">SOILED</span>
+                </div>
+                <div class="weight-lines">
+                  <div class="weight-line active">
+                    <span class="weight-check active">✅</span>
+                    <span class="weight-label">Soiled</span>
+                    <span class="weight-calc">20.0 kg × ₹4.00</span>
+                    <span class="weight-amount">₹80.00</span>
+                  </div>
+                  <div class="weight-line dimmed">
+                    <span class="weight-check inactive">○</span>
+                    <span class="weight-label">Calculated</span>
+                    <span class="weight-calc">22.5 kg × ₹4.00</span>
+                    <span class="weight-amount">₹90.00</span>
+                  </div>
+                  <div class="weight-line dimmed fresh-line">
+                    <span class="weight-check inactive">○</span>
+                    <span class="weight-label" style="color: var(--fresh-blue);">Fresh</span>
+                    <span class="weight-calc">19.0 kg × ₹4.00</span>
+                    <span class="weight-amount" style="color: var(--fresh-blue);">₹76.00</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Damage -->
+              <div class="damage-row">
+                <span class="damage-label">⚠ Damage Deduction</span>
+                <span class="damage-amount">−₹1.00</span>
+              </div>
+
+              <!-- Hotel Total -->
+              <div class="hotel-subtotal-row">
+                <span class="subtotal-label">Hotel Total</span>
+                <span class="subtotal-amount">₹79.00</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── Sidebar: Leaderboard ── -->
+        <div class="content-side">
+          <div class="leaderboard">
+            <div class="leaderboard-title">🏆 Hotel Leaderboard</div>
+
+            <div class="lb-item">
+              <div class="lb-rank lb-rank-1">1</div>
+              <div class="lb-info">
+                <div class="lb-hotel">Hotel Sunrise</div>
+                <div class="lb-bar-bg">
+                  <div class="lb-bar-fill" style="width: 100%; background: linear-gradient(90deg, #FFA000, #FFB74D);"></div>
+                </div>
+              </div>
+              <div class="lb-amount">₹607.00</div>
+            </div>
+
+            <div class="lb-item">
+              <div class="lb-rank lb-rank-2">2</div>
+              <div class="lb-info">
+                <div class="lb-hotel">Hotel Grand</div>
+                <div class="lb-bar-bg">
+                  <div class="lb-bar-fill" style="width: 13%; background: linear-gradient(90deg, #78909C, #B0BEC5);"></div>
+                </div>
+              </div>
+              <div class="lb-amount">₹79.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grand Total -->
+      <div class="grand-total">
+        <div class="grand-total-label">Grand Total (Mar 1 – Mar 15, 2026)</div>
+        <div class="grand-total-amount">₹686.00</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ DETAILED VIEW ═══════════════ -->
+    <div id="detailed-view">
+
+      <!-- Hotel Sunrise -->
+      <div class="hotel-detail-section">
+        <div class="hotel-detail-title">🏨 Hotel Sunrise — ₹607.00</div>
+
+        <!-- Challan CN-007 -->
+        <div class="challan-card">
+          <div class="challan-header">
+            <div class="challan-id">
+              CN-007
+              <span class="challan-type-badge badge-pickup">PICKUP</span>
+            </div>
+            <div class="challan-meta">
+              <span>📅 Mar 15, 9:45 AM</span>
+              <span>👤 Agent: Rajesh</span>
+            </div>
+          </div>
+          <div class="challan-body">
+            <div class="challan-line">
+              <span class="challan-line-label">Housekeeping <span class="dept-badge badge-weight" style="font-size:9px;">WEIGHT</span></span>
+              <span class="challan-line-calc">25.5 kg × ₹3.00</span>
+              <span class="challan-line-amount">₹76.50</span>
+            </div>
+            <div class="challan-line">
+              <span class="challan-line-label">Restaurant <span class="dept-badge badge-piece" style="font-size:9px;">PIECE</span></span>
+              <span class="challan-line-calc">Napkin 500 × ₹0.75</span>
+              <span class="challan-line-amount">₹375.00</span>
+            </div>
+          </div>
+          <div class="challan-footer">
+            <span class="challan-total-label">Challan Total</span>
+            <span class="challan-total-amount">₹451.50</span>
+          </div>
+        </div>
+
+        <!-- Challan CN-005 -->
+        <div class="challan-card">
+          <div class="challan-header">
+            <div class="challan-id">
+              CN-005
+              <span class="challan-type-badge badge-pickup">PICKUP</span>
+            </div>
+            <div class="challan-meta">
+              <span>📅 Mar 10, 10:20 AM</span>
+              <span>👤 Agent: Suresh</span>
+            </div>
+          </div>
+          <div class="challan-body">
+            <div class="challan-line">
+              <span class="challan-line-label">Housekeeping <span class="dept-badge badge-weight" style="font-size:9px;">WEIGHT</span></span>
+              <span class="challan-line-calc">19.5 kg × ₹3.00</span>
+              <span class="challan-line-amount">₹58.50</span>
+            </div>
+            <div class="challan-line">
+              <span class="challan-line-label">Restaurant <span class="dept-badge badge-piece" style="font-size:9px;">PIECE</span></span>
+              <span class="challan-line-calc">Tablecloth 50 × ₹2.00</span>
+              <span class="challan-line-amount">₹100.00</span>
+            </div>
+          </div>
+          <div class="challan-footer">
+            <span class="challan-total-label">Challan Total</span>
+            <span class="challan-total-amount">₹158.50</span>
+          </div>
+        </div>
+
+        <!-- Damage -->
+        <div class="challan-card" style="border-left: 3px solid var(--damage-red);">
+          <div class="damage-row" style="padding: 14px 20px;">
+            <span class="damage-label">⚠ Total Damage Deduction</span>
+            <span class="damage-amount">−₹3.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hotel Grand -->
+      <div class="hotel-detail-section">
+        <div class="hotel-detail-title">🏨 Hotel Grand — ₹79.00</div>
+
+        <!-- Challan CN-012 -->
+        <div class="challan-card">
+          <div class="challan-header">
+            <div class="challan-id">
+              CN-012
+              <span class="challan-type-badge badge-delivery">DELIVERY</span>
+            </div>
+            <div class="challan-meta">
+              <span>📅 Mar 14, 2:30 PM</span>
+              <span>👤 Agent: Amit</span>
+            </div>
+          </div>
+          <div class="challan-body">
+            <div class="challan-line">
+              <span class="challan-line-label">Spa <span class="dept-badge badge-weight" style="font-size:9px;">WEIGHT</span></span>
+              <span class="challan-line-calc">20.0 kg × ₹4.00</span>
+              <span class="challan-line-amount">₹80.00</span>
+            </div>
+          </div>
+          <div class="challan-footer">
+            <span class="challan-total-label">Challan Total</span>
+            <span class="challan-total-amount">₹80.00</span>
+          </div>
+        </div>
+
+        <!-- Damage -->
+        <div class="challan-card" style="border-left: 3px solid var(--damage-red);">
+          <div class="damage-row" style="padding: 14px 20px;">
+            <span class="damage-label">⚠ Total Damage Deduction</span>
+            <span class="damage-amount">−₹1.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grand Total (detailed) -->
+      <div class="grand-total">
+        <div class="grand-total-label">Grand Total (Mar 1 – Mar 15, 2026)</div>
+        <div class="grand-total-amount">₹686.00</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function toggleHotel(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+function setWeightMode(btn) {
+  document.querySelectorAll('#weight-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const mode = btn.dataset.mode;
+  document.querySelectorAll('.badge-mode').forEach(badge => {
+    badge.textContent = mode.toUpperCase();
+  });
+
+  document.querySelectorAll('.weight-lines').forEach(group => {
+    const lines = group.querySelectorAll('.weight-line');
+    lines.forEach(line => {
+      line.classList.remove('active', 'dimmed');
+      const check = line.querySelector('.weight-check');
+      check.classList.remove('active', 'inactive');
+
+      const label = line.querySelector('.weight-label').textContent.trim().toLowerCase();
+      if (label === mode) {
+        line.classList.add('active');
+        check.classList.add('active');
+        check.textContent = '✅';
+      } else {
+        line.classList.add('dimmed');
+        check.classList.add('inactive');
+        check.textContent = '○';
+      }
+    });
+  });
+}
+
+function switchView(view) {
+  const summary = document.getElementById('summary-view');
+  const detailed = document.getElementById('detailed-view');
+  const tabSummary = document.getElementById('tab-summary');
+  const tabDetailed = document.getElementById('tab-detailed');
+
+  if (view === 'summary') {
+    summary.classList.remove('hidden');
+    detailed.classList.remove('visible');
+    tabSummary.classList.add('active');
+    tabDetailed.classList.remove('active');
+  } else {
+    summary.classList.add('hidden');
+    detailed.classList.add('visible');
+    tabSummary.classList.remove('active');
+    tabDetailed.classList.add('active');
+  }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Billing Report — LaundroTrack</title>
+<style>
+  :root {
+    --primary: #1A237E;
+    --primary-light: #3949AB;
+    --accent: #00897B;
+    --pickup-blue: #1565C0;
+    --delivery-green: #2E7D32;
+    --bg: #F5F5F5;
+    --card: #FFFFFF;
+    --text-primary: #212121;
+    --text-secondary: #757575;
+    --border: #E0E0E0;
+    --fresh-blue: #0277BD;
+    --font: -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font); background: #E8EAF6; min-height: 100vh;
+    display: flex; justify-content: center; align-items: center; padding: 32px 16px;
+    color: var(--text-primary);
+  }
+
+  /* ===== Phone Frame ===== */
+  .phone-frame {
+    width: 420px; max-width: 100%; height: 860px; background: var(--bg);
+    border-radius: 40px; overflow: hidden; position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25), 0 0 0 2px #444, 0 0 0 6px #222;
+    display: flex; flex-direction: column;
+  }
+
+  /* Notch */
+  .phone-frame::before {
+    content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 150px; height: 28px; background: #222; border-radius: 0 0 18px 18px; z-index: 50;
+  }
+
+  /* Status bar */
+  .status-bar {
+    height: 48px; background: var(--primary); display: flex; align-items: flex-end;
+    justify-content: space-between; padding: 0 24px 4px; color: rgba(255,255,255,0.8);
+    font-size: 12px; font-weight: 600; flex-shrink: 0; position: relative; z-index: 40;
+  }
+  .status-bar .time { font-size: 13px; }
+  .status-bar .icons { display: flex; gap: 6px; align-items: center; }
+  .status-bar .icons span { font-size: 13px; }
+
+  /* App bar */
+  .app-bar {
+    background: var(--primary); padding: 12px 20px 14px; display: flex;
+    align-items: center; gap: 12px; flex-shrink: 0;
+  }
+  .app-bar .back { color: #fff; font-size: 22px; cursor: pointer; text-decoration: none; line-height: 1; }
+  .app-bar .title { color: #fff; font-size: 18px; font-weight: 700; flex: 1; }
+  .app-bar .action { color: rgba(255,255,255,0.8); font-size: 20px; cursor: pointer; }
+
+  /* ===== Scrollable Content ===== */
+  .content { flex: 1; overflow-y: auto; padding-bottom: 16px; }
+
+  /* ===== View Toggle (Summary / Detailed) ===== */
+  .view-toggle {
+    display: flex; margin: 14px 16px 0; border-radius: 10px; overflow: hidden;
+    border: 2px solid var(--primary); background: var(--card);
+  }
+  .view-toggle button {
+    flex: 1; padding: 10px 0; border: none; font-size: 14px; font-weight: 700;
+    font-family: var(--font); cursor: pointer; transition: all .2s;
+    background: transparent; color: var(--primary);
+  }
+  .view-toggle button.active {
+    background: var(--primary); color: #fff;
+  }
+  .view-toggle button:not(.active):hover { background: rgba(26,35,126,0.06); }
+
+  /* ===== Date Range ===== */
+  .date-range {
+    display: flex; align-items: center; gap: 8px; margin: 14px 16px 0;
+    padding: 10px 14px; background: var(--card); border-radius: 10px;
+    border: 1px solid var(--border); font-size: 14px; color: var(--text-primary);
+    font-weight: 600; cursor: pointer;
+  }
+  .date-range .cal-icon { font-size: 18px; color: var(--primary-light); }
+  .date-range .chevron { margin-left: auto; color: var(--text-secondary); font-size: 16px; }
+
+  /* ===== Weight Mode Toggle ===== */
+  .weight-toggle-wrap {
+    margin: 14px 16px 0; display: flex; flex-direction: column; gap: 6px;
+  }
+  .weight-toggle-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.8px; color: var(--text-secondary);
+  }
+  .weight-toggle {
+    display: flex; border-radius: 10px; overflow: hidden;
+    border: 2px solid var(--primary); background: var(--card);
+  }
+  .weight-toggle button {
+    flex: 1; padding: 9px 0; border: none; font-size: 12px; font-weight: 700;
+    font-family: var(--font); cursor: pointer; transition: all .2s;
+    background: transparent; color: var(--primary); letter-spacing: 0.3px;
+  }
+  .weight-toggle button.active {
+    background: var(--primary); color: #fff;
+  }
+  .weight-toggle button:not(.active):hover { background: rgba(26,35,126,0.06); }
+  .weight-toggle button + button { border-left: 1px solid var(--border); }
+
+  /* ===== Department Cards ===== */
+  .dept-card {
+    margin: 14px 16px 0; background: var(--card); border-radius: 12px;
+    border: 1px solid var(--border); overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .dept-header {
+    display: flex; align-items: center; padding: 14px 16px; cursor: pointer;
+    user-select: none; gap: 10px;
+  }
+  .dept-header .dept-icon {
+    width: 36px; height: 36px; border-radius: 8px; display: flex;
+    align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+  }
+  .dept-header .dept-icon.hk { background: #E3F2FD; }
+  .dept-header .dept-icon.rest { background: #FFF3E0; }
+  .dept-header .dept-info { flex: 1; }
+  .dept-header .dept-name { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+  .dept-header .dept-badge {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 2px 7px; border-radius: 4px;
+    display: inline-block; margin-top: 2px;
+  }
+  .dept-header .dept-badge.weight { background: #E3F2FD; color: var(--pickup-blue); }
+  .dept-header .dept-badge.piece { background: #FFF3E0; color: #E65100; }
+  .dept-header .dept-badge.soiled { background: #E8F5E9; color: var(--delivery-green); margin-left: 4px; }
+  .dept-header .dept-subtotal {
+    font-size: 16px; font-weight: 800; color: var(--primary);
+    white-space: nowrap;
+  }
+  .dept-header .chevron-icon {
+    font-size: 18px; color: var(--text-secondary); transition: transform .2s;
+    margin-left: 4px;
+  }
+  .dept-card.expanded .dept-header .chevron-icon { transform: rotate(180deg); }
+
+  .dept-body {
+    max-height: 0; overflow: hidden; transition: max-height .3s ease;
+  }
+  .dept-card.expanded .dept-body { max-height: 600px; }
+  .dept-body-inner { padding: 0 16px 14px; }
+  .dept-divider { height: 1px; background: var(--border); margin: 0 16px; }
+
+  /* Weight lines */
+  .weight-line {
+    display: flex; align-items: center; padding: 8px 0; gap: 8px;
+    font-size: 13px; color: var(--text-secondary);
+  }
+  .weight-line.active {
+    color: var(--text-primary); font-weight: 600;
+  }
+  .weight-line.dimmed { opacity: 0.55; }
+  .weight-line.fresh-line { color: var(--fresh-blue); }
+  .weight-line.fresh-line.dimmed { color: var(--fresh-blue); opacity: 0.45; }
+  .weight-line .wl-check {
+    width: 20px; height: 20px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;
+  }
+  .weight-line.active .wl-check {
+    background: #E8F5E9; color: var(--delivery-green); font-weight: 700;
+  }
+  .weight-line.dimmed .wl-check { background: #F5F5F5; color: var(--text-secondary); }
+  .weight-line.fresh-line .wl-check { background: #E1F5FE; color: var(--fresh-blue); }
+  .weight-line .wl-label { flex: 1; }
+  .weight-line .wl-calc { white-space: nowrap; font-size: 12px; }
+  .weight-line .wl-amount { font-weight: 700; white-space: nowrap; min-width: 64px; text-align: right; }
+  .weight-line.active .wl-amount { color: var(--delivery-green); }
+
+  .comparison-note {
+    margin-top: 6px; padding: 8px 10px; border-radius: 8px; background: #F5F5F5;
+    font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;
+  }
+  .comparison-note .cn-icon { font-size: 14px; }
+
+  .line-subtotal {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border);
+    font-size: 14px; font-weight: 700; color: var(--primary);
+  }
+
+  /* Piece-based item lines */
+  .piece-line {
+    display: flex; align-items: center; padding: 7px 0; font-size: 13px;
+    color: var(--text-primary); gap: 6px;
+  }
+  .piece-line .pl-dot { width: 6px; height: 6px; border-radius: 50%; background: #E65100; flex-shrink: 0; }
+  .piece-line .pl-name { flex: 1; }
+  .piece-line .pl-calc { color: var(--text-secondary); font-size: 12px; white-space: nowrap; }
+  .piece-line .pl-amount { font-weight: 700; min-width: 64px; text-align: right; white-space: nowrap; }
+
+  /* Damage Liability */
+  .damage-row {
+    margin: 14px 16px 0; background: var(--card); border-radius: 12px;
+    border: 1px solid var(--border); padding: 14px 16px;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .damage-row .dr-icon {
+    width: 36px; height: 36px; border-radius: 8px; background: #FFEBEE;
+    display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+  }
+  .damage-row .dr-info { flex: 1; }
+  .damage-row .dr-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .damage-row .dr-sub { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+  .damage-row .dr-amount { font-size: 16px; font-weight: 800; color: #C62828; }
+  .damage-row .info-tooltip {
+    position: relative; cursor: pointer; font-size: 14px; color: var(--text-secondary);
+  }
+  .damage-row .info-tooltip .tooltip-text {
+    display: none; position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%);
+    width: 200px; background: #333; color: #fff; font-size: 11px; padding: 8px 10px;
+    border-radius: 8px; text-align: center; font-weight: 400; z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .damage-row .info-tooltip .tooltip-text::after {
+    content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    border: 5px solid transparent; border-top-color: #333;
+  }
+  .damage-row .info-tooltip:hover .tooltip-text { display: block; }
+
+  /* Grand Total */
+  .grand-total {
+    margin: 16px 16px 0; background: var(--primary); border-radius: 14px;
+    padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 4px 16px rgba(26,35,126,0.35);
+  }
+  .grand-total .gt-label { color: rgba(255,255,255,0.85); font-size: 14px; font-weight: 600; }
+  .grand-total .gt-sublabel { color: rgba(255,255,255,0.55); font-size: 11px; margin-top: 2px; }
+  .grand-total .gt-amount { color: #fff; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+
+  /* Detailed teaser */
+  .detailed-teaser {
+    margin: 14px 16px 0; padding: 12px 14px; background: #E8EAF6; border-radius: 10px;
+    display: flex; align-items: center; gap: 8px; cursor: pointer;
+    border: 1px dashed var(--primary-light); transition: background .2s;
+  }
+  .detailed-teaser:hover { background: #D1D4E8; }
+  .detailed-teaser .dt-icon { font-size: 18px; color: var(--primary-light); }
+  .detailed-teaser .dt-text { font-size: 12px; color: var(--primary); font-weight: 600; flex: 1; line-height: 1.4; }
+  .detailed-teaser .dt-arrow { font-size: 18px; color: var(--primary-light); }
+
+  /* ===== Bottom Nav ===== */
+  .bottom-nav {
+    height: 62px; background: var(--card); border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-around; flex-shrink: 0;
+    padding: 0 4px;
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    font-size: 10px; font-weight: 600; color: var(--text-secondary); cursor: pointer;
+    transition: color .2s; padding: 4px 8px; min-width: 52px;
+  }
+  .nav-item .nav-icon { font-size: 20px; transition: transform .2s; }
+  .nav-item.active { color: var(--primary); }
+  .nav-item.active .nav-icon { transform: scale(1.1); }
+  .nav-item:hover:not(.active) { color: var(--primary-light); }
+
+  /* Safe area spacer at bottom */
+  .safe-area { height: 6px; background: var(--card); flex-shrink: 0; }
+
+  /* Home indicator */
+  .home-indicator {
+    height: 20px; background: var(--card); display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0;
+  }
+  .home-indicator::after {
+    content: ''; width: 134px; height: 5px; border-radius: 3px; background: #C0C0C0;
+  }
+
+  /* Scrollbar styling */
+  .content::-webkit-scrollbar { width: 3px; }
+  .content::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+  <!-- Status bar -->
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="icons">
+      <span>&#9679;&#9679;&#9679;&#9679;</span>
+      <span>&#9889;</span>
+    </div>
+  </div>
+
+  <!-- App bar -->
+  <div class="app-bar">
+    <a class="back" href="#">&#8592;</a>
+    <span class="title">Billing Report</span>
+    <span class="action">&#8942;</span>
+  </div>
+
+  <!-- Scrollable content -->
+  <div class="content">
+
+    <!-- View Toggle: Summary / Detailed -->
+    <div class="view-toggle" id="viewToggle">
+      <button class="active" data-view="summary" onclick="switchView('summary')">Summary</button>
+      <button data-view="detailed" onclick="switchView('detailed')">Detailed</button>
+    </div>
+
+    <!-- Date Range -->
+    <div class="date-range">
+      <span class="cal-icon">&#128197;</span>
+      <span>Mar 1 – Mar 15, 2026</span>
+      <span class="chevron">&#9662;</span>
+    </div>
+
+    <!-- Weight Mode 3-way toggle -->
+    <div class="weight-toggle-wrap">
+      <span class="weight-toggle-label">Billing Weight Mode</span>
+      <div class="weight-toggle" id="weightToggle">
+        <button class="active" data-mode="soiled" onclick="switchWeight('soiled')">SOILED</button>
+        <button data-mode="calculated" onclick="switchWeight('calculated')">CALCULATED</button>
+        <button data-mode="fresh" onclick="switchWeight('fresh')">FRESH</button>
+      </div>
+    </div>
+
+    <!-- Summary View -->
+    <div id="summaryView">
+
+      <!-- Housekeeping Card -->
+      <div class="dept-card expanded" id="hkCard" onclick="toggleCard('hkCard')">
+        <div class="dept-header">
+          <div class="dept-icon hk">&#128722;</div>
+          <div class="dept-info">
+            <div class="dept-name">Housekeeping</div>
+            <span class="dept-badge weight">WEIGHT</span>
+            <span class="dept-badge soiled">SOILED</span>
+          </div>
+          <div class="dept-subtotal">&#8377;135.00</div>
+          <span class="chevron-icon">&#9660;</span>
+        </div>
+        <div class="dept-divider"></div>
+        <div class="dept-body">
+          <div class="dept-body-inner">
+
+            <!-- Soiled Weight (active) -->
+            <div class="weight-line active">
+              <div class="wl-check">&#10003;</div>
+              <span class="wl-label">Soiled Weight</span>
+              <span class="wl-calc">45.0 kg &times; &#8377;3.00</span>
+              <span class="wl-amount">&#8377;135.00</span>
+            </div>
+
+            <!-- Calculated Weight (dimmed) -->
+            <div class="weight-line dimmed">
+              <div class="wl-check">&#9675;</div>
+              <span class="wl-label">Calculated Weight</span>
+              <span class="wl-calc">61.5 kg &times; &#8377;3.00</span>
+              <span class="wl-amount">&#8377;184.50</span>
+            </div>
+
+            <!-- Fresh Weight (dimmed, new) -->
+            <div class="weight-line fresh-line dimmed">
+              <div class="wl-check">&#9675;</div>
+              <span class="wl-label">Fresh Weight</span>
+              <span class="wl-calc">43.0 kg &times; &#8377;3.00</span>
+              <span class="wl-amount">&#8377;129.00</span>
+            </div>
+
+            <!-- Comparison Note -->
+            <div class="comparison-note">
+              <span class="cn-icon">&#9878;</span>
+              <span>Soiled &#8377;135 &nbsp;|&nbsp; Calc &#8377;184.50 &nbsp;|&nbsp; Fresh &#8377;129</span>
+            </div>
+
+            <!-- Subtotal -->
+            <div class="line-subtotal">
+              <span>Subtotal</span>
+              <span>&#8377;135.00</span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Restaurant Card -->
+      <div class="dept-card expanded" id="restCard" onclick="toggleCard('restCard')">
+        <div class="dept-header">
+          <div class="dept-icon rest">&#127869;</div>
+          <div class="dept-info">
+            <div class="dept-name">Restaurant</div>
+            <span class="dept-badge piece">PIECE</span>
+          </div>
+          <div class="dept-subtotal">&#8377;475.00</div>
+          <span class="chevron-icon">&#9660;</span>
+        </div>
+        <div class="dept-divider"></div>
+        <div class="dept-body">
+          <div class="dept-body-inner">
+
+            <div class="piece-line">
+              <span class="pl-dot"></span>
+              <span class="pl-name">Napkin</span>
+              <span class="pl-calc">500 &times; &#8377;0.75</span>
+              <span class="pl-amount">&#8377;375.00</span>
+            </div>
+
+            <div class="piece-line">
+              <span class="pl-dot"></span>
+              <span class="pl-name">Tablecloth</span>
+              <span class="pl-calc">50 &times; &#8377;2.00</span>
+              <span class="pl-amount">&#8377;100.00</span>
+            </div>
+
+            <div class="line-subtotal">
+              <span>Subtotal</span>
+              <span>&#8377;475.00</span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Damage Liability -->
+      <div class="damage-row">
+        <div class="dr-icon">&#9888;</div>
+        <div class="dr-info">
+          <div class="dr-label">Damage Liability</div>
+          <div class="dr-sub">Net laundry-attributed damage</div>
+        </div>
+        <div class="dr-amount">-&#8377;3.00</div>
+        <div class="info-tooltip">
+          &#9432;
+          <div class="tooltip-text">
+            Damage = max(0, delivery_damaged − cumulative_pickup_damaged). Only excess damage attributed to laundry is deducted.
+          </div>
+        </div>
+      </div>
+
+      <!-- Grand Total -->
+      <div class="grand-total">
+        <div>
+          <div class="gt-label">Grand Total</div>
+          <div class="gt-sublabel">Mar 1 – Mar 15, 2026</div>
+        </div>
+        <div class="gt-amount">&#8377;607.00</div>
+      </div>
+
+      <!-- Detailed View Teaser -->
+      <div class="detailed-teaser" onclick="switchView('detailed')">
+        <span class="dt-icon">&#128196;</span>
+        <span class="dt-text">Switch to Detailed view for challan-wise billing breakdown</span>
+        <span class="dt-arrow">&#8594;</span>
+      </div>
+
+    </div><!-- /summaryView -->
+
+    <!-- Detailed View (hidden by default) -->
+    <div id="detailedView" style="display:none;">
+
+      <div style="margin:14px 16px 0; padding:20px; background:var(--card); border-radius:12px; border:1px solid var(--border); text-align:center;">
+        <div style="font-size:40px; margin-bottom:10px;">&#128203;</div>
+        <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:6px;">Challan-wise Breakdown</div>
+        <div style="font-size:12px; color:var(--text-secondary); line-height:1.5;">
+          Each challan shows date, number, items, and billing amount grouped by department and weight type.
+        </div>
+      </div>
+
+      <!-- Sample challan card -->
+      <div style="margin:12px 16px 0; background:var(--card); border-radius:12px; border:1px solid var(--border); overflow:hidden;">
+        <div style="padding:12px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border);">
+          <div style="width:32px; height:32px; border-radius:8px; background:#E3F2FD; display:flex; align-items:center; justify-content:center; font-size:15px;">&#128230;</div>
+          <div style="flex:1;">
+            <div style="font-size:13px; font-weight:700;">#PK-20260301-001</div>
+            <div style="font-size:11px; color:var(--text-secondary);">Mar 1, 2026 &middot; Pickup</div>
+          </div>
+          <div style="font-size:14px; font-weight:800; color:var(--primary);">&#8377;48.00</div>
+        </div>
+        <div style="padding:10px 16px;">
+          <div style="display:flex; justify-content:space-between; font-size:12px; padding:3px 0; color:var(--text-secondary);">
+            <span>Housekeeping &middot; Soiled</span>
+            <span style="font-weight:600; color:var(--text-primary);">15.0 kg &times; &#8377;3.00 = &#8377;45.00</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:12px; padding:3px 0; color:var(--text-secondary);">
+            <span>Restaurant &middot; Napkin</span>
+            <span style="font-weight:600; color:var(--text-primary);">4 &times; &#8377;0.75 = &#8377;3.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Another sample -->
+      <div style="margin:10px 16px 0; background:var(--card); border-radius:12px; border:1px solid var(--border); overflow:hidden;">
+        <div style="padding:12px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border);">
+          <div style="width:32px; height:32px; border-radius:8px; background:#E8F5E9; display:flex; align-items:center; justify-content:center; font-size:15px;">&#128230;</div>
+          <div style="flex:1;">
+            <div style="font-size:13px; font-weight:700;">#DL-20260305-002</div>
+            <div style="font-size:11px; color:var(--text-secondary);">Mar 5, 2026 &middot; Delivery</div>
+          </div>
+          <div style="font-size:14px; font-weight:800; color:var(--delivery-green);">&#8377;87.00</div>
+        </div>
+        <div style="padding:10px 16px;">
+          <div style="display:flex; justify-content:space-between; font-size:12px; padding:3px 0; color:var(--text-secondary);">
+            <span>Housekeeping &middot; Soiled</span>
+            <span style="font-weight:600; color:var(--text-primary);">15.0 kg &times; &#8377;3.00 = &#8377;45.00</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:12px; padding:3px 0; color:var(--text-secondary);">
+            <span>Restaurant &middot; Tablecloth</span>
+            <span style="font-weight:600; color:var(--text-primary);">21 &times; &#8377;2.00 = &#8377;42.00</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin:12px 16px 0; text-align:center; color:var(--text-secondary); font-size:12px; padding:8px 0;">
+        Showing 2 of 12 challans &middot; Scroll for more
+      </div>
+
+      <!-- Grand total repeated in detailed view -->
+      <div class="grand-total">
+        <div>
+          <div class="gt-label">Grand Total</div>
+          <div class="gt-sublabel">Mar 1 – Mar 15, 2026</div>
+        </div>
+        <div class="gt-amount">&#8377;607.00</div>
+      </div>
+
+      <!-- Back to summary teaser -->
+      <div class="detailed-teaser" onclick="switchView('summary')">
+        <span class="dt-icon">&#128202;</span>
+        <span class="dt-text">Switch back to Summary view for totals overview</span>
+        <span class="dt-arrow">&#8592;</span>
+      </div>
+
+    </div><!-- /detailedView -->
+
+  </div><!-- /content -->
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-item">
+      <span class="nav-icon">&#9632;</span>
+      <span>Dashboard</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">&#128230;</span>
+      <span>Inventory</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">&#128203;</span>
+      <span>Challans</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">&#9733;</span>
+      <span>Quality</span>
+    </div>
+    <div class="nav-item active">
+      <span class="nav-icon">&#128176;</span>
+      <span>Billing</span>
+    </div>
+  </div>
+
+  <div class="safe-area"></div>
+  <div class="home-indicator"></div>
+</div>
+
+<script>
+  function toggleCard(id) {
+    document.getElementById(id).classList.toggle('expanded');
+  }
+
+  function switchView(view) {
+    const btns = document.querySelectorAll('#viewToggle button');
+    btns.forEach(b => b.classList.toggle('active', b.dataset.view === view));
+    document.getElementById('summaryView').style.display = view === 'summary' ? 'block' : 'none';
+    document.getElementById('detailedView').style.display = view === 'detailed' ? 'block' : 'none';
+  }
+
+  function switchWeight(mode) {
+    const btns = document.querySelectorAll('#weightToggle button');
+    btns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  }
+
+  // Prevent card toggle when clicking inside the body
+  document.querySelectorAll('.dept-body').forEach(el => {
+    el.addEventListener('click', e => e.stopPropagation());
+  });
+</script>
+
+</body>
+</html>

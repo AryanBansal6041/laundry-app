@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaundroTrack ERP — UI Mockups</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; background: #F5F5F5; color: #212121; }
+  .header { background: linear-gradient(135deg, #1A237E 0%, #3949AB 100%); color: white; padding: 48px 24px 40px; text-align: center; }
+  .header h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+  .header p { font-size: 16px; opacity: 0.85; max-width: 600px; margin: 0 auto; }
+  .header .badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 13px; margin-top: 12px; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+  .section { margin-bottom: 40px; }
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .section-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; flex-shrink: 0; }
+  .section-icon.agent { background: #1565C0; }
+  .section-icon.hotel { background: #00897B; }
+  .section-icon.admin { background: #1A237E; }
+  .section-icon.shared { background: #757575; }
+  .section h2 { font-size: 20px; font-weight: 600; }
+  .section h2 span { font-size: 13px; font-weight: 400; color: #757575; margin-left: 8px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; text-decoration: none; color: inherit; display: block; }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+  .card-top { height: 6px; }
+  .card-top.blue { background: #1565C0; }
+  .card-top.green { background: #2E7D32; }
+  .card-top.teal { background: #00897B; }
+  .card-top.indigo { background: #1A237E; }
+  .card-top.gray { background: #757575; }
+  .card-body { padding: 20px; }
+  .card-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .card-desc { font-size: 13px; color: #757575; line-height: 1.5; margin-bottom: 12px; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .tag.mobile { background: #E3F2FD; color: #1565C0; }
+  .tag.tablet { background: #E0F2F1; color: #00897B; }
+  .tag.web { background: #EDE7F6; color: #7B1FA2; }
+  .tag.api { background: #FFF3E0; color: #E65100; }
+  .tag.offline { background: #FCE4EC; color: #C62828; }
+  .tag.crud { background: #F3E5F5; color: #7B1FA2; }
+  .stats { display: flex; gap: 24px; justify-content: center; margin-top: 20px; }
+  .stat { text-align: center; }
+  .stat-value { font-size: 28px; font-weight: 700; }
+  .stat-label { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+  .footer { text-align: center; padding: 32px 24px; color: #757575; font-size: 13px; border-top: 1px solid #E0E0E0; margin-top: 24px; }
+  .footer a { color: #1A237E; text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>LaundroTrack ERP</h1>
+  <p>UI Mockups — Interactive HTML prototypes for the Flutter mobile & web application</p>
+  <div class="badge">Flutter · iOS · Android · Web</div>
+  <div class="stats">
+    <div class="stat"><div class="stat-value">20</div><div class="stat-label">Screens</div></div>
+    <div class="stat"><div class="stat-value">3</div><div class="stat-label">User Roles</div></div>
+    <div class="stat"><div class="stat-value">3</div><div class="stat-label">Platforms</div></div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Shared -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon shared">🔐</div>
+      <h2>Authentication <span>All roles</span></h2>
+    </div>
+    <div class="grid">
+      <a href="login.html" class="card">
+        <div class="card-top gray"></div>
+        <div class="card-body">
+          <div class="card-title">Login Screen (Google Sign-In)</div>
+          <div class="card-desc">Google Sign-In authentication with role-based redirect. Split layout on desktop, centered single-button on mobile.</div>
+          <div class="card-tags">
+            <span class="tag mobile">Mobile</span>
+            <span class="tag web">Desktop</span>
+            <span class="tag api">POST /auth/google</span>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Agent Flow -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon agent">📋</div>
+      <h2>Service Agent Flow <span>Mobile · Offline-capable</span></h2>
+    </div>
+    <div class="grid">
+      <a href="agent_home.html" class="card">
+        <div class="card-top blue"></div>
+        <div class="card-body">
+          <div class="card-title">Agent Home</div>
+          <div class="card-desc">Assigned hotels with pending delivery counts, offline sync card, and quick actions.</div>
+          <div class="card-tags">
+            <span class="tag mobile">Mobile</span>
+            <span class="tag offline">Offline</span>
+          </div>
+        </div>
+      </a>
+      <a href="agent_department_select.html" class="card">
+        <div class="card-top blue"></div>
+        <div class="card-body">
+          <div class="card-title">Department Selection</div>
+          <div class="card-desc">Choose department with WEIGHT/PIECE billing badges and PICKUP/DELIVERY toggle.</div>
+          <div class="card-tags">
+            <span class="tag mobile">Mobile</span>
+            <span class="tag offline">Offline</span>
+          </div>
+        </div>
+      </a>
+      <a href="agent_pickup_form.html" class="card">
+        <div class="card-top blue"></div>
+        <div class="card-body">
+          <div class="card-title">Pickup Form</div>
+          <div class="card-desc">Challan number, soiled weight, item rows with qty/damaged steppers. The core data entry screen.</div>
+          <div class="card-tags">
+            <span class="tag mobile">Mobile</span>
+            <span class="tag offline">Offline</span>
+            <span class="tag api">POST /challans/pickup</span>
+          </div>
+        </div>
+      </a>
+      <a href="agent_delivery_form.html" class="card">
+        <div class="card-top green"></div>
+        <div class="card-body">
+          <div class="card-title">Delivery Form</div>
+          <div class="card-desc">Select pending pickup CN, item rows with "in laundry" hints, over-delivery error display.</div>
+          <div class="card-tags">
+            <span class="tag mobile">Mobile</span>
+            <span class="tag offline">Offline</span>
+            <span class="tag api">POST /challans/delivery</span>
+          </div>
+        </div>
+      </a>
+      <a href="agent_challan_detail.html" class="card">
+        <div class="card-top blue"></div>
+        <div class="card-body">
+          <div class="card-title">Challan Detail</div>
+          <div class="card-desc">Receipt view with items table, soiled weight, image thumbnail, edit button with 24h timer.</div>
+          <div class="card-tags">
+            <span class="tag mobile">Mobile</span>
+          </div>
+        </div>
+      </a>
+      <a href="agent_challan_history.html" class="card">
+        <div class="card-top blue"></div>
+        <div class="card-body">
+          <div class="card-title">Challan History</div>
+          <div class="card-desc">Paginated list with filters: department, type (PICKUP/DELIVERY), date range.</div>
+          <div class="card-tags">
+            <span class="tag mobile">Mobile</span>
+            <span class="tag api">GET /challans/hotel/{id}</span>
+          </div>
+        </div>
+      </a>
+      <a href="agent_pending_deliveries.html" class="card">
+        <div class="card-top green"></div>
+        <div class="card-body">
+          <div class="card-title">Pending Deliveries</div>
+          <div class="card-desc">Pickups awaiting delivery with age indicators (green → amber → red overdue).</div>
+          <div class="card-tags">
+            <span class="tag mobile">Mobile</span>
+            <span class="tag api">GET /pending-deliveries</span>
+          </div>
+        </div>
+      </a>
+      <a href="agent_pending_sync.html" class="card">
+        <div class="card-top blue"></div>
+        <div class="card-body">
+          <div class="card-title">Offline Queue</div>
+          <div class="card-desc">Pending/syncing/failed challan queue with error messages and retry actions.</div>
+          <div class="card-tags">
+            <span class="tag mobile">Mobile</span>
+            <span class="tag offline">Offline</span>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Hotel Admin -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon hotel">🏨</div>
+      <h2>Hotel Admin Flow <span>Mobile + Tablet</span></h2>
+    </div>
+    <div class="grid">
+      <a href="hotel_dashboard.html" class="card">
+        <div class="card-top teal"></div>
+        <div class="card-body">
+          <div class="card-title">Hotel Dashboard</div>
+          <div class="card-desc">Stat cards (items in laundry, damaged), recent activity timeline. Tablet: DataTable view.</div>
+          <div class="card-tags">
+            <span class="tag mobile">Mobile</span>
+            <span class="tag tablet">Tablet</span>
+          </div>
+        </div>
+      </a>
+      <a href="hotel_live_inventory.html" class="card">
+        <div class="card-top teal"></div>
+        <div class="card-body">
+          <div class="card-title">Live Inventory</div>
+          <div class="card-desc">Real-time items at laundry grouped by department. Color-coded damage indicators. Auto-refresh.</div>
+          <div class="card-tags">
+            <span class="tag mobile">Mobile</span>
+            <span class="tag tablet">Tablet</span>
+            <span class="tag api">GET /live-tracking</span>
+          </div>
+        </div>
+      </a>
+      <a href="hotel_billing.html" class="card">
+        <div class="card-top teal"></div>
+        <div class="card-body">
+          <div class="card-title">Billing Report</div>
+          <div class="card-desc">WEIGHT/PIECE department breakdown, soiled vs calculated toggle, damage deduction, grand total.</div>
+          <div class="card-tags">
+            <span class="tag mobile">Mobile</span>
+            <span class="tag tablet">Tablet</span>
+            <span class="tag api">GET /reports/billing</span>
+          </div>
+        </div>
+      </a>
+      <a href="hotel_damage_report.html" class="card">
+        <div class="card-top teal"></div>
+        <div class="card-body">
+          <div class="card-title">Damage Report</div>
+          <div class="card-desc">Period damage summary + all-time totals. Explains the damage attribution formula.</div>
+          <div class="card-tags">
+            <span class="tag mobile">Mobile</span>
+            <span class="tag tablet">Tablet</span>
+            <span class="tag api">GET /quality-control/damages</span>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Super Admin -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon admin">⚙️</div>
+      <h2>Super Admin Console <span>Web / Desktop</span></h2>
+    </div>
+    <div class="grid">
+      <a href="admin_dashboard.html" class="card">
+        <div class="card-top indigo"></div>
+        <div class="card-body">
+          <div class="card-title">Admin Dashboard</div>
+          <div class="card-desc">Global stats, 30-day challan volume chart, damage red flags, recent challans table.</div>
+          <div class="card-tags">
+            <span class="tag web">Desktop</span>
+            <span class="tag api">GET /dashboards/super-admin</span>
+          </div>
+        </div>
+      </a>
+      <a href="admin_hotels.html" class="card">
+        <div class="card-top indigo"></div>
+        <div class="card-body">
+          <div class="card-title">Hotels CRUD</div>
+          <div class="card-desc">DataTable of all hotels with search. Add Hotel dialog with name, address, contact.</div>
+          <div class="card-tags">
+            <span class="tag web">Desktop</span>
+            <span class="tag crud">CRUD</span>
+            <span class="tag api">GET/POST /admin/hotels</span>
+          </div>
+        </div>
+      </a>
+      <a href="admin_hotel_detail.html" class="card">
+        <div class="card-top indigo"></div>
+        <div class="card-body">
+          <div class="card-title">Hotel Detail</div>
+          <div class="card-desc">Hotel info, departments table (billing type, weight source), assigned agents. Add Dept dialog.</div>
+          <div class="card-tags">
+            <span class="tag web">Desktop</span>
+            <span class="tag crud">CRUD</span>
+          </div>
+        </div>
+      </a>
+      <a href="admin_items.html" class="card">
+        <div class="card-top indigo"></div>
+        <div class="card-body">
+          <div class="card-title">Items Management</div>
+          <div class="card-desc">Two-panel: Items Master list + Department-Item linking with calculated weight / price per piece.</div>
+          <div class="card-tags">
+            <span class="tag web">Desktop</span>
+            <span class="tag crud">CRUD</span>
+            <span class="tag api">GET/POST /setup/items</span>
+          </div>
+        </div>
+      </a>
+      <a href="admin_users.html" class="card">
+        <div class="card-top indigo"></div>
+        <div class="card-body">
+          <div class="card-title">Users CRUD</div>
+          <div class="card-desc">User table with role badges (colored). Create User dialog with conditional hotel field for HOTEL_ADMIN.</div>
+          <div class="card-tags">
+            <span class="tag web">Desktop</span>
+            <span class="tag crud">CRUD</span>
+            <span class="tag api">POST /admin/users</span>
+          </div>
+        </div>
+      </a>
+      <a href="admin_agent_mapping.html" class="card">
+        <div class="card-top indigo"></div>
+        <div class="card-body">
+          <div class="card-title">Agent-Hotel Mapping</div>
+          <div class="card-desc">Mappings grouped by agent. Assign/unassign actions. Create Mapping dialog.</div>
+          <div class="card-tags">
+            <span class="tag web">Desktop</span>
+            <span class="tag crud">CRUD</span>
+            <span class="tag api">POST /admin/mappings</span>
+          </div>
+        </div>
+      </a>
+      <a href="admin_billing.html" class="card">
+        <div class="card-top indigo"></div>
+        <div class="card-body">
+          <div class="card-title">Billing Reports</div>
+          <div class="card-desc">All-hotel billing with hotel filter, weight mode toggle, department breakdown, hotel leaderboard.</div>
+          <div class="card-tags">
+            <span class="tag web">Desktop</span>
+            <span class="tag api">GET /reports/billing</span>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <p>LaundroTrack ERP — UI Mockups &middot; 20 screens &middot; <a href="../SCREENS.md">View full screen documentation (SCREENS.md)</a></p>
+  <p style="margin-top: 8px;">Open any mockup in your browser. Resize the window to see responsive breakpoints.</p>
+</div>
+
+</body>
+</html>
