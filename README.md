@@ -1210,11 +1210,13 @@ GOOGLE_WEB_CLIENT_ID=842773680982-rsastn80pmm97a17k75a9n3t7hn56s8t.apps.googleus
 Create `.env.prod`:
 
 ```env
-BASE_API_URL=https://api.laundrotrack.com
+BASE_API_URL=/api
 AWS_S3_BUCKET=laundrotrack-challans
 AWS_REGION=ap-south-1
 GOOGLE_WEB_CLIENT_ID=842773680982-rsastn80pmm97a17k75a9n3t7hn56s8t.apps.googleusercontent.com
 ```
+
+For same-server deployments (frontend + backend behind one Nginx host), keep `BASE_API_URL=/api` and proxy `/api/*` to the backend service (for example `127.0.0.1:8000`).
 
 ### Running Tests
 
